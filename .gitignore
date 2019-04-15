@@ -1,3 +1,5 @@
 .idea/
 venv/
 __pycache__
+coreEntityEmotion_baseline-master/data/
+*.joblib
