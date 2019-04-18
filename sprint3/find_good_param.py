@@ -4,6 +4,11 @@
 @Time    : 2019/4/19 0:28
 @Author  : Blue Keroro
 """
+import os
+import sys
+curPath = os.path.abspath(os.path.dirname(__file__))
+rootPath = os.path.split(curPath)[0]
+sys.path.append(rootPath)
 from tqdm import tqdm
 
 from sprint3.test import Test

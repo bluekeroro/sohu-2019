@@ -1,0 +1,43 @@
+nohup: ignoring input
+Building prefix dict from the default dictionary ...
+Loading model from cache /tmp/jieba.cache
+Loading model cost 0.972 seconds.
+Prefix dict has been built succesfully.
+  0%|          | 0/90 [00:00<?, ?it/s]param= 10
+
+  0%|          | 0/100 [00:00<?, ?it/s][A
+  5%|▌         | 5/100 [00:00<00:01, 47.70it/s][A
+ 12%|█▏        | 12/100 [00:00<00:01, 48.50it/s][A
+ 15%|█▌        | 15/100 [00:00<00:02, 37.18it/s][A
+ 20%|██        | 20/100 [00:00<00:02, 39.93it/s][A
+ 30%|███       | 30/100 [00:00<00:01, 48.36it/s][A
+ 36%|███▌      | 36/100 [00:00<00:01, 50.86it/s][A
+ 42%|████▏     | 42/100 [00:00<00:01, 36.03it/s][A
+ 48%|████▊     | 48/100 [00:01<00:01, 40.50it/s][A
+ 54%|█████▍    | 54/100 [00:01<00:01, 42.92it/s][A
+ 61%|██████    | 61/100 [00:01<00:00, 48.50it/s][A
+ 67%|██████▋   | 67/100 [00:01<00:00, 50.64it/s][A
+ 74%|███████▍  | 74/100 [00:01<00:00, 52.29it/s][A
+ 80%|████████  | 80/100 [00:01<00:00, 50.48it/s][A
+ 86%|████████▌ | 86/100 [00:01<00:00, 43.27it/s][A
+ 91%|█████████ | 91/100 [00:02<00:00, 37.40it/s][A
+ 96%|█████████▌| 96/100 [00:02<00:00, 38.74it/s][A
+100%|██████████| 100/100 [00:02<00:00, 44.45it/s][A
+Traceback (most recent call last):
+  File "find_good_param.py", line 34, in <module>
+    find_good_param('param.txt')
+  File "find_good_param.py", line 23, in find_good_param
+    entityScore, emotionScore = accuracy(test, input_param=param / 10)
+  File "/root/sohu-2019/sprint3/validation_accuracy.py", line 27, in accuracy
+    '../coreEntityEmotion_baseline/data/2_coreEntityEmotion_train_result.txt')
+  File "/root/sohu-2019/f1_score.py", line 18, in computeF1Score
+    trueData = loadTrueData(true_path)
+  File "/root/sohu-2019/f1_score.py", line 58, in loadTrueData
+    for line in f.readlines():
+  File "/root/sohu-2019/lib/python3.6/codecs.py", line 708, in readlines
+    return self.reader.readlines(sizehint)
+  File "/root/sohu-2019/lib/python3.6/codecs.py", line 617, in readlines
+    data = self.read()
+  File "/root/sohu-2019/lib/python3.6/codecs.py", line 503, in read
+    newchars, decodedbytes = self.decode(data, self.errors)
+MemoryError
