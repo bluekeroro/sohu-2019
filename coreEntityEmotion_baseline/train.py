@@ -13,6 +13,7 @@ import re
 from scipy.sparse import vstack
 from tqdm import tqdm
 
+
 class Train():
     def __init__(self):
         # load nerDict as named entity recognizer
@@ -27,10 +28,10 @@ class Train():
         '''
         # 1. train tfIdf as core entity score model
         trainData = self.loadData('data/coreEntityEmotion_train.txt')
-        # trainData = trainData[0:10] # 减小数量
+        trainData = trainData[:500] # 减小数量
         print("loading all ner corpus from train data...")
 
-        nerCorpus = []
+        nerCorpus = [] # ['xx xx xx',...]
         for news in tqdm(trainData):
             nerCorpus.append(' '.join(self.getEntity(news)))
 
@@ -38,7 +39,7 @@ class Train():
         tfIdf = TfidfVectorizer()
         tfIdf.fit(nerCorpus)
         # 1.1 save tfIdf model
-        dump(tfIdf, 'models/nerTfIdf.joblib')
+        dump(tfIdf, 'coreEntityEmotion_baseline/models/nerTfIdf.joblib')
 
         # 2. train LR with tfIdf score as features
         isCoreX = []
@@ -61,7 +62,7 @@ class Train():
         print("training LR model for coreEntity...")
         clf = LogisticRegression(random_state=0, solver='lbfgs',
                                  multi_class='multinomial').fit(isCoreX, isCoreY) # 将关键词词频和非关键词词频进行训练
-        dump(clf, 'models/CoreEntityCLF.joblib')
+        dump(clf, 'coreEntityEmotion_baseline/models/CoreEntityCLF.joblib')
 
     def trainEmotion(self):
         '''
@@ -69,8 +70,8 @@ class Train():
         Baseline use tfIdf vector as feature, linearSVC as classfication model
         :return:
         '''
-        trainData = self.loadData('data/coreEntityEmotion_train.txt')
-        # trainData = trainData[0:10] # 减小数量
+        trainData = self.loadData('coreEntityEmotion_baseline/data/coreEntityEmotion_train.txt')
+        trainData = trainData[0:10] # 减小数量
         emotionX = []
         emotionY = []
 
@@ -106,10 +107,10 @@ class Train():
 
         tfIdf = TfidfVectorizer()
         tfIdf.fit(emotionWordCorpus)
-        dump(tfIdf, 'models/emotionTfIdf.joblib')
+        dump(tfIdf, 'coreEntityEmotion_baseline/models/emotionTfIdf.joblib')
 
         # 3. use naive bayes to train emotion classifiction
-        emotionX = vstack([tfIdf.transform(x) for x in emotionX]).toarray() # 拼接全部的词频矩阵
+        emotionX = vstack([tfIdf.transform(x) for x in emotionX]).tocsr() # 拼接全部的词频矩阵
 
         print("training emotion clf with linearSVC...")
 
@@ -119,7 +120,7 @@ class Train():
 
         print(clf.score(emotionX, emotionY))
 
-        dump(clf, 'models/emotionCLF.joblib')
+        dump(clf, 'coreEntityEmotion_baseline/models/emotionCLF.joblib')
 
     def getTfIdfScore(self, news, tfIdf):
         featureName = tfIdf.get_feature_names()  # 获得文本的关键词
@@ -139,9 +140,9 @@ class Train():
 
     def loadNerDict(self):
         nerDictFile = codecs.open('models/nerDict.txt', 'r', 'utf-8')
-        self.nerDict = []
+        self.nerDict = set()
         for line in nerDictFile:
-            self.nerDict.append(line.strip())
+            self.nerDict.add(line.strip())
 
     def getWords(self, news):
         '''
@@ -179,6 +180,9 @@ class Train():
 
 
 if __name__ == '__main__':
+    from time import time
+    start = time()
     trainer = Train()
     trainer.trainCoreEntity()
-    trainer.trainEmotion()
+    # trainer.trainEmotion()
+    print('train end:',time() - start)

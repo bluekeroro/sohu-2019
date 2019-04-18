@@ -22,4 +22,4 @@ def data_split(path, name):
 
 
 if __name__ == '__main__':
-    data_split('data', 'coreEntityEmotion_train.txt')
+    data_split('coreEntityEmotion_baseline/data', 'coreEntityEmotion_train.txt')

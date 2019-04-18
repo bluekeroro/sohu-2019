@@ -1,26 +1,28 @@
 # -*- coding: utf-8 -*-
 from joblib import load
-from train import Train
+from coreEntityEmotion_baseline.train import Train
 import re
 import codecs
+from tqdm import tqdm
 
 class Test(Train):
     def __init__(self):
         super(Test, self).__init__()
-        self.coreEntityTfIdf = load('models/coreEntityTfIdf.joblib')
-        self.coreEntityCLF = load('models/coreEntityCLF.joblib')
+        self.coreEntityTfIdf = load('coreEntityEmotion_baseline/models/nerTfIdf.joblib')
+        self.coreEntityCLF = load('coreEntityEmotion_baseline/models/CoreEntityCLF.joblib')
 
-        self.emotionTfIdf = load('models/emotionTfIdf.joblib')
-        self.emotionCLF = load('models/emotionCLF.joblib')
+        # self.emotionTfIdf = load('models/emotionTfIdf.joblib')
+        # self.emotionCLF = load('models/emotionCLF.joblib')
 
     def testCoreEntity(self):
-        testData = self.loadData('data/coreEntityEmotion_test_stage1.txt')
+        testData = self.loadData('coreEntityEmotion_baseline/data/2_coreEntityEmotion_train.txt')
+        testData = testData[:100]
 
-        f_submit = codecs.open('data/coreEntityEmotion_sample_submission_stage1.txt',
+        f_submit = codecs.open('coreEntityEmotion_baseline/data/2_coreEntityEmotion_train_result.txt',
                                         'w', 'utf-8')
 
-        for news in testData:
-            print(news)
+        for news in tqdm(testData):
+            # print(news)
             predictCoreEntityEmotion = {}
 
             tfIdfNameScore = self.getTfIdfScore(news, self.coreEntityTfIdf)
@@ -28,9 +30,10 @@ class Test(Train):
             # predict core Entities
             coreEntities = []
             for name, score in tfIdfNameScore:
+                # print(self.coreEntityCLF.predict([[score]]))
                 if(self.coreEntityCLF.predict([[score]]) > 0.5):
                     coreEntities.append(name)
-
+            # print('newsId:',news['newsId'],'coreEntities:',coreEntities)
             # predict emotion of core entity
             for entity in coreEntities:
                 text = news['title'] + '\n' + news['content']
@@ -38,10 +41,10 @@ class Test(Train):
                 for sent in re.split(r'[\n\t，。！？“”（）]', text):
                     if (entity in sent):
                         relatedSents.append(sent)
-                relatedText = ' '.join(relatedSents)
-                emotionTfIdfFeature = self.emotionTfIdf.transform([relatedText]).toarray()
-                emotion = self.emotionCLF.predict(emotionTfIdfFeature)
-                predictCoreEntityEmotion[entity] = emotion[0]
+                # relatedText = ' '.join(relatedSents)
+                # emotionTfIdfFeature = self.emotionTfIdf.transform([relatedText]).toarray()
+                # emotion = self.emotionCLF.predict(emotionTfIdfFeature)
+                predictCoreEntityEmotion[entity] ='POS'    #emotion[0]
 
             all_entities = []
             all_emotions = []
