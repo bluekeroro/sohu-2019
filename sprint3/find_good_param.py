@@ -6,6 +6,7 @@
 """
 import os
 import sys
+
 curPath = os.path.abspath(os.path.dirname(__file__))
 rootPath = os.path.split(curPath)[0]
 sys.path.append(rootPath)
@@ -17,14 +18,14 @@ from sprint3.validation_accuracy import accuracy
 
 def find_good_param(output_path):
     test = Test()
-    ret_list = []
+    # ret_list = []
+    file = open(output_path, 'w', encoding='utf-8')
     for param in tqdm(range(10, 100)):
-        print('param=',param)
+        print('param=', param)
         entityScore, emotionScore = accuracy(test, input_param=param / 10)
-        ret_list.append([param / 10, entityScore, emotionScore])
-    with open(output_path, 'w', encoding='utf-8') as f:
-        for i in ret_list:
-            f.write(','.join(i) + '\n')
+        # ret_list.append([param / 10, entityScore, emotionScore])
+        file.write(','.join([str(param / 10), str(entityScore), str(emotionScore)]) + '\n')
+    file.close()
 
 
 if __name__ == '__main__':

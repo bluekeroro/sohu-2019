@@ -15,7 +15,7 @@ class Train():
     def loadData(self, filePath):
         f = codecs.open(filePath, 'r', 'utf-8')
         data = []
-        for line in f.readlines():
+        for line in f:
             news = json.loads(line.strip())
             data.append(news)
         return data
