@@ -18,14 +18,12 @@ from sprint3.validation_accuracy import accuracy
 
 def find_good_param(output_path):
     test = Test()
-    # ret_list = []
-    file = open(output_path, 'w', encoding='utf-8')
-    for param in tqdm(range(10, 100)):
-        print('param=', param)
-        entityScore, emotionScore = accuracy(test, input_param=param / 10)
-        # ret_list.append([param / 10, entityScore, emotionScore])
-        file.write(','.join([str(param / 10), str(entityScore), str(emotionScore)]) + '\n')
-    file.close()
+    with open(output_path, 'w', encoding='utf-8') as file:
+        for param in range(10, 100):
+            print('param=', param)
+            entityScore, emotionScore = accuracy(test, input_param=param / 10)
+            file.write(','.join([str(param / 10), str(entityScore), str(emotionScore)]) + '\n')
+
 
 
 if __name__ == '__main__':

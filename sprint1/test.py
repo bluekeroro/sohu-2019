@@ -13,7 +13,7 @@ class Test(Train):
     def __init__(self):
         super(Test, self).__init__()
 
-        self.not_word = '[\n\t，,。\u200b！!?？“”""''~：:;；{}+-——=、/.()（|）%^&*@#$ 《》【】[]\\]'
+        self.not_word = '[\n\t，,。`……·\u200b！!?？“”""''~：:;；{}+-——=、/.()（|）%^&*@#$ 《》【】[]\\]'
         self.param = 3
 
     def testCoreEntity(self, test_path, result_path, param=None, debug=True):
