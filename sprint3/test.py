@@ -14,7 +14,7 @@ class Test(Train):
         super(Test, self).__init__()
 
         self.not_word = '[\n\t，,。`……·\u200b！!?？“”""''~：:;；{}+-——=、/.()（|）%^&*@#$ 《》【】[]\\]'
-        self.param = 5.6
+        self.param = 4.9
 
     def testCoreEntity(self, test_path, result_path, param=None, debug=True):
         if param != None:
@@ -124,7 +124,10 @@ class Test(Train):
             str_input = str_input.replace('《','')
         elif '》' in str_input and '《' not in str_input:
             str_input = str_input.replace('》', '')
+        str_input = str_input.replace('\'','')
+        str_input = str_input.replace('\"', '') # 如果实体中只含有一个引号，会导致提交报错
         return str_input
+
         # 不能直接删除左右两端的符号
         # left = 0
         # right = len(str_input)

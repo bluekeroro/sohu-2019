@@ -126,6 +126,8 @@ class Test(Train):
             str_input = str_input.replace('《','')
         elif '》' in str_input and '《' not in str_input:
             str_input = str_input.replace('》', '')
+        str_input = str_input.replace('\'', '')
+        str_input = str_input.replace('\"', '')  # 如果实体中只含有一个引号，会导致提交报错
         return str_input
         # 不能直接删除左右两端的符号
         # left = 0
