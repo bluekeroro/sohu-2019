@@ -42,8 +42,8 @@ class feature_ents():
             word = word.replace('《', '').replace('》', '').replace('[', '') \
                 .replace(']', '').replace('【', '').replace('】', '')
             jieba.add_word(word)
-        content_words = jieba.analyse.extract_tags(content, topK=40, withWeight=True, allowPOS=self.key_word_pos)  # [(,),...]
-        title_words = jieba.analyse.extract_tags(title, topK=40, withWeight=True, allowPOS=self.key_word_pos)
+        content_words = jieba.analyse.extract_tags(content, topK=40, withWeight=True)  # [(,),...]
+        title_words = jieba.analyse.extract_tags(title, topK=40, withWeight=True)
         content_words_merge = {}
         title_words_merge = {}
         mergeWords = []
@@ -77,8 +77,8 @@ class feature_ents():
                 if len(re_word) > 0:
                     jieba.add_word(re_word)
         content_words_merge = dict(
-            jieba.analyse.extract_tags(content, topK=40, withWeight=True, allowPOS=self.key_word_pos))  # [(,),...]
-        title_words_merge = dict(jieba.analyse.extract_tags(title, topK=40, withWeight=True, allowPOS=self.key_word_pos))
+            jieba.analyse.extract_tags(content, topK=40, withWeight=True))  # [(,),...]
+        title_words_merge = dict(jieba.analyse.extract_tags(title, topK=40, withWeight=True))
         content_words = dict(content_words)
         content_words.update(content_words_merge)
         title_words = dict(title_words)
@@ -102,8 +102,8 @@ class feature_ents():
             word = word.replace('《', '').replace('》', '').replace('[', '') \
                 .replace(']', '').replace('【', '').replace('】', '')
             jieba.add_word(word)
-        content_words = jieba.analyse.textrank(content, topK=40, withWeight=True)  # [(,),...]
-        title_words = jieba.analyse.textrank(title, topK=40, withWeight=True)
+        content_words = jieba.analyse.textrank(content, topK=40, withWeight=True,allowPOS=self.key_word_pos)  # [(,),...]
+        title_words = jieba.analyse.textrank(title, topK=40, withWeight=True,allowPOS=self.key_word_pos)
         content_words_merge = {}
         title_words_merge = {}
         mergeWords = []
@@ -137,8 +137,8 @@ class feature_ents():
                 if len(re_word) > 0:
                     jieba.add_word(re_word)
         content_words_merge = dict(
-            jieba.analyse.textrank(content, topK=40, withWeight=True))  # [(,),...]
-        title_words_merge = dict(jieba.analyse.textrank(title, topK=40, withWeight=True))
+            jieba.analyse.textrank(content, topK=40, withWeight=True,allowPOS=self.key_word_pos))  # [(,),...]
+        title_words_merge = dict(jieba.analyse.textrank(title, topK=40, withWeight=True,allowPOS=self.key_word_pos))
         content_words = dict(content_words)
         content_words.update(content_words_merge)
         title_words = dict(title_words)
@@ -155,13 +155,15 @@ class feature_ents():
     def combine_features(self, news):
         content_words_tfidf, title_words_tfidf = self.get_tfidf_Score(news)
         content_words_textRank, title_words_textRank = self.get_textRank_Score(news)
-        content_words_tfidf = content_words_textRank
-        title_words_tfidf = title_words_textRank
-        keys = content_words_tfidf.keys()|content_words_tfidf.keys()
+        # content_words_tfidf = content_words_textRank
+        # title_words_tfidf = title_words_textRank
+        keys = content_words_tfidf.keys()|title_words_tfidf.keys()|content_words_textRank.keys()|title_words_textRank.keys()
         features = []
         for ner in keys:
             features.append([[ner],[content_words_tfidf[ner] if ner in content_words_tfidf else 0,
                                     title_words_tfidf[ner] if ner in title_words_tfidf else 0,
+                                    content_words_textRank[ner] if ner in content_words_textRank else 0,
+                                    title_words_textRank[ner] if ner in title_words_textRank else 0,
                                     len(ner),self.num_of_not_word(ner)]]) # 特征：正文中的tfidf，标题中的tfidf，实体的长度,含有符号的个数
         # self.num_of_not_word(ner)
         # 正则化 （效果差）

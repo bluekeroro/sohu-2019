@@ -27,7 +27,8 @@
     * 两次结巴分词merge topK=40 增加停用词 准确率70.48% ->理想100%
     * 两次结巴分词merge topK=40 增加停用词 26.38% (textRank allpos)
     * 两次结巴分词merge topK=40 增加停用词 17.41% (textRank)
-    * 两次结巴分词merge topK=40 增加停用词 ... (tfidf allpos)
+    * 两次结巴分词merge topK=40 增加停用词 28.56% (tfidf allpos)
+    * 两次结巴分词merge topK=40 增加停用词 82.50% (tfidf allpos tfidf_not allpos)
 * pkuseg分词测试:
     * 未加stopWord  63.493182886694875%
     * 加stopWord   64.51574988246357%
@@ -85,4 +86,6 @@
         * 增加特征：文中的tfidf，标题中的tfidf，实体的长度,含有符号的个数(jieba增加停用词)
             * 线下：0.40681250000000013,0.20989136904761943
         * 增加特征：文中的textRank，标题中的textRank，实体的长度,含有符号的个数(jieba增加停用词)
-            * 线下：...
+            * 线下：...（bad）
+        * 增加特征：文中的tfidf，标题中的tfidf，文中的textRank，标题中的textRank，实体的长度,含有符号的个数(jieba增加停用词)
+            * 线下：0.40471428571428625, 0.2119821428571433

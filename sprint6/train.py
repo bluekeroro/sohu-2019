@@ -4,7 +4,7 @@
 @Time    : 2019/4/21 18:49
 @Author  : Blue Keroro
 """
-import lightgbm as lgb
+import xgboost as xgb
 import time
 import json
 from joblib import load, dump
@@ -21,29 +21,37 @@ class Train():
         self.feature_ents_func = feature_ents_func
         self.debug = debug
 
-    def model_lgb(self, X, Y):
+    def model_xgb(self, X, Y):
         # create dataset for lightgbm
         train_x, valid_x, train_y, valid_y = train_test_split(X, Y, test_size=0.1, random_state=0)  # 分训练集和验证集
-        lgb_train = lgb.Dataset(train_x, train_y)
-        lgb_eval = lgb.Dataset(valid_x, valid_y, reference=lgb_train)
+        xgb_train = xgb.DMatrix(train_x, label=train_y)
+        xgb_eval = xgb.DMatrix(valid_x, label=valid_y)
 
         # specify your configurations as a dict
         params = {
-            'task': 'train',
-            'boosting_type': 'gbdt',  # 可换为rf(随机森林) dart goss
-            'objective': 'binary',
-            'metric': {'cross_entropy'},
-            'num_leaves': 31,
-            'max_depth': 6,  # 3
-            'learning_rate': 0.08,
-            'bagging_fraction': 0.8,
-            'bagging_freq': 5,
-            'seed': 0,
-            # 'min_data_in_leaf ': 100,
+            'booster': 'gbtree',
+            'objective': 'multi:softmax',
+            'num_class': 10,  # 类数，与 multisoftmax 并用
+            'gamma': 0.1,  # 用于控制是否后剪枝的参数,越大越保守，一般0.1、0.2这样子。
+            'max_depth': 20,
+            'lambda': 2,  # 控制模型复杂度的权重值的L2正则化项参数，参数越大，模型越不容易过拟合。
+            'subsample': 0.7,  # 随机采样训练样本
+            'colsample_bytree': 0.7,  # 生成树时进行的列采样
+            'min_child_weight': 3,
+            'eta': 0.4,
+            'eval_metric': 'merror',
+            'silent': 0,
+            'seed': 1000,
+            'nthread': 4,  # cpu 线程数
         }
+        # dtrain, dtest = Get_data()
+        watchlist = [(xgb_train, 'train'), (xgb_eval, 'valid')]
         # train
-        print("Training lgb model....")
-        gbm = lgb.train(params, lgb_train, num_boost_round=100, valid_sets=lgb_eval, early_stopping_rounds=10)
+        print("Training xgb model....")
+        evals_result = {}
+        gbm = xgb.train(params, xgb_train, evals=watchlist, evals_result=evals_result, num_boost_round=200,
+                        early_stopping_rounds=10)
+        print('xgb 训练结果 evals_result：', evals_result)
         print("Save model to " + self.model_path)
         dump(gbm, self.model_path)
 
@@ -53,27 +61,27 @@ class Train():
             train_data = train_data[:int(len(train_data) / 10)]
         X = []
         Y = []
-        cnt=0
-        cntSum=0
+        cnt = 0
+        cntSum = 0
         for news in tqdm(train_data):
             news = json.loads(news)
             X_data = self.feature_ents_func.combine_features(news)
             Y_data = [x['entity'] for x in news['coreEntityEmotions']]
-            cntSum+=len(Y_data)
+            cntSum += len(Y_data)
             for x in X_data:
                 if x[0][0] in Y_data:
-                    cnt+=1
+                    cnt += 1
                     Y.append(1)
                 else:
                     Y.append(0)
                 X.append(x[1])
-        print("结巴分词准确率：{}%".format(cnt/cntSum*100))
+        print("结巴分词准确率：{}%".format(cnt / cntSum * 100))
         print("Save features... ")
         dump(X, "models/x1_featrues.joblib")
         dump(Y, "models/y1_featrues.joblib")
         # X = load("models/x1_featrues.joblib")f
         # Y = load("models/y1_featrues.joblib")
-        self.model_lgb(X, Y)
+        self.model_xgb(X, Y)
         print("done!")
 
 

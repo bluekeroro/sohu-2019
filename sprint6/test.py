@@ -4,7 +4,6 @@
 @Time    : 2019/4/21 19:37
 @Author  : Blue Keroro
 """
-import lightgbm as lgb
 import csv
 import time
 import json

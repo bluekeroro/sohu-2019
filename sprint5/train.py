@@ -25,7 +25,7 @@ class Train():
         # create dataset for lightgbm
         train_x, valid_x, train_y, valid_y = train_test_split(X, Y, test_size=0.1, random_state=0)  # 分训练集和验证集
         lgb_train = lgb.Dataset(train_x, train_y)
-        lgb_eval = lgb.Dataset(valid_x, valid_y, reference=lgb_train)
+        lgb_eval = lgb.Dataset(valid_x, valid_y)
 
         # specify your configurations as a dict
         params = {
@@ -42,8 +42,11 @@ class Train():
             # 'min_data_in_leaf ': 100,
         }
         # train
+        evals_result = {}
         print("Training lgb model....")
-        gbm = lgb.train(params, lgb_train, num_boost_round=100, valid_sets=lgb_eval, early_stopping_rounds=10)
+        gbm = lgb.train(params, lgb_train, num_boost_round=100, valid_sets=[lgb_eval, lgb_train],
+                        valid_names=['eval', 'train'], evals_result=evals_result, early_stopping_rounds=10)
+        print('lgb 训练结果 evals_result：', evals_result)
         print("Save model to " + self.model_path)
         dump(gbm, self.model_path)
 
@@ -53,21 +56,21 @@ class Train():
             train_data = train_data[:int(len(train_data) / 10)]
         X = []
         Y = []
-        cnt=0
-        cntSum=0
+        cnt = 0
+        cntSum = 0
         for news in tqdm(train_data):
             news = json.loads(news)
             X_data = self.feature_ents_func.combine_features(news)
             Y_data = [x['entity'] for x in news['coreEntityEmotions']]
-            cntSum+=len(Y_data)
+            cntSum += len(Y_data)
             for x in X_data:
                 if x[0][0] in Y_data:
-                    cnt+=1
+                    cnt += 1
                     Y.append(1)
                 else:
                     Y.append(0)
                 X.append(x[1])
-        print("结巴分词准确率：{}%".format(cnt/cntSum*100))
+        print("结巴分词准确率：{}%".format(cnt / cntSum * 100))
         print("Save features... ")
         dump(X, "models/x1_featrues.joblib")
         dump(Y, "models/y1_featrues.joblib")
