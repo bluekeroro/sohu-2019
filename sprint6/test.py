@@ -11,7 +11,7 @@ import json
 from joblib import load, dump
 from tqdm import tqdm
 import re
-from sprint5.features_ents import feature_ents
+from sprint6.features_ents import feature_ents
 
 
 class Test():

@@ -102,8 +102,8 @@ class feature_ents():
             word = word.replace('《', '').replace('》', '').replace('[', '') \
                 .replace(']', '').replace('【', '').replace('】', '')
             jieba.add_word(word)
-        content_words = jieba.analyse.textrank(content, topK=40, withWeight=True,allowPOS=self.key_word_pos)  # [(,),...]
-        title_words = jieba.analyse.textrank(title, topK=40, withWeight=True,allowPOS=self.key_word_pos)
+        content_words = jieba.analyse.textrank(content, topK=40, withWeight=True)  # [(,),...]
+        title_words = jieba.analyse.textrank(title, topK=40, withWeight=True)
         content_words_merge = {}
         title_words_merge = {}
         mergeWords = []
@@ -137,8 +137,8 @@ class feature_ents():
                 if len(re_word) > 0:
                     jieba.add_word(re_word)
         content_words_merge = dict(
-            jieba.analyse.textrank(content, topK=40, withWeight=True,allowPOS=self.key_word_pos))  # [(,),...]
-        title_words_merge = dict(jieba.analyse.textrank(title, topK=40, withWeight=True,allowPOS=self.key_word_pos))
+            jieba.analyse.textrank(content, topK=40, withWeight=True))  # [(,),...]
+        title_words_merge = dict(jieba.analyse.textrank(title, topK=40, withWeight=True))
         content_words = dict(content_words)
         content_words.update(content_words_merge)
         title_words = dict(title_words)
@@ -154,9 +154,9 @@ class feature_ents():
     # 把特征接到一起
     def combine_features(self, news):
         content_words_tfidf, title_words_tfidf = self.get_tfidf_Score(news)
-        # content_words_textRank, title_words_textRank = self.get_textRank_Score(news)
-        # content_words_tfidf = content_words_textRank
-        # title_words_tfidf = title_words_textRank
+        content_words_textRank, title_words_textRank = self.get_textRank_Score(news)
+        content_words_tfidf = content_words_textRank
+        title_words_tfidf = title_words_textRank
         keys = content_words_tfidf.keys()|content_words_tfidf.keys()
         features = []
         for ner in keys:

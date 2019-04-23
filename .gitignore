@@ -8,3 +8,5 @@ bin/
 include/
 lib/
 __init__.py
+*.pkl
+*.npz

@@ -49,8 +49,15 @@ def loadPredData(filePath):
         for line in f.readlines():
             line = line.strip().split("\t")
             data[line[0]] = {}
-            data[line[0]]['entity'] = line[1].split(',')
-            data[line[0]]['emotion'] = line[2].split(',')
+            try:
+                data[line[0]]['entity'] = line[1].split(',')
+                data[line[0]]['emotion'] = line[2].split(',')
+            except IndexError:
+                print("该文章没有实体")
+                data[line[0]]['entity'] = ['实体']  # 临时替代
+                data[line[0]]['emotion'] = ['POS'] # 临时替代
+
+
             if len(data[line[0]]['entity']) != len(data[line[0]]['emotion']):
                 raise Exception("实体与情感数量不等", "newsId:", line[0])
             tmp = []

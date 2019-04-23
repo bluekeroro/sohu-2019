@@ -23,13 +23,20 @@ class Test():
         self.ents_model = load(ents_model_path)
 
     def test(self):
+        result_newsId = set()
+        with open(self.output_file, 'r', encoding='utf-8') as file:
+            for line in file:
+                line = line.strip().split('\t')
+                result_newsId.add(line[0])
         test_file = open(self.test_file, 'r', encoding='utf-8').readlines()
-        res_file = open(self.output_file, 'w', encoding='utf-8')
+        res_file = open(self.output_file, 'a', encoding='utf-8')
         fea_ents = feature_ents('../coreEntityEmotion_baseline/models/nerDict.txt',
                                 '../coreEntityEmotion_baseline/models/stopwords.txt')
 
         for news in tqdm(test_file):
             news = json.loads(news)
+            if news['newsId'] in result_newsId:
+                continue
             ent_fea = fea_ents.combine_features(news)
             # 预测实体
             ent_predict_result = []
