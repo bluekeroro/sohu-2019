@@ -25,35 +25,35 @@ class Train():
         # create dataset for lightgbm
         train_x, valid_x, train_y, valid_y = train_test_split(X, Y, test_size=0.1, random_state=0)  # 分训练集和验证集
         lgb_train = lgb.Dataset(train_x, train_y)
-        lgb_eval = lgb.Dataset(valid_x, valid_y)
+        lgb_eval = lgb.Dataset(valid_x, valid_y, reference=lgb_train)
 
         # specify your configurations as a dict
         params = {
             'task': 'train',
             'boosting_type': 'gbdt',  # 可换为rf(随机森林) dart goss
             'objective': 'binary',
-            'metric': {'cross_entropy'},
-            'num_leaves': 31,
+            'metric': {'cross_entropy'},  # cross_entropy
+            'num_leaves': 50,
             'max_depth': 6,  # 3
-            'learning_rate': 0.08,
+            'learning_rate': 0.06,
             'bagging_fraction': 0.8,
             'bagging_freq': 5,
             'seed': 0,
             # 'min_data_in_leaf ': 100,
-        }
+        }  # f1 0.43
         # train
-        evals_result = {}
+        evals_result_dict = {}
         print("Training lgb model....")
-        gbm = lgb.train(params, lgb_train, num_boost_round=100, valid_sets=[lgb_eval, lgb_train],
-                        valid_names=['eval', 'train'], evals_result=evals_result, early_stopping_rounds=10)
-        print('lgb 训练结果 evals_result：', evals_result)
+        gbm = lgb.train(params, lgb_train, num_boost_round=100, valid_sets=[lgb_eval, lgb_train], early_stopping_rounds=10,
+                        valid_names=['eval', 'train'], evals_result=evals_result_dict)
+        print('lgb 训练结果 evals_result：', evals_result_dict)
         print("Save model to " + self.model_path)
         dump(gbm, self.model_path)
 
     def train_ents(self):
         train_data = open(self.train_data_path, 'r', encoding='utf-8').readlines()
         if self.debug is True:
-            train_data = train_data[:int(len(train_data) / 10)]
+            train_data = train_data[:int(len(train_data) / 10 / 10)]
         X = []
         Y = []
         cnt = 0

@@ -19,13 +19,14 @@ class Test():
         # 测试文件
         self.test_file = test_file
         self.output_file = output_file
-        # 训练好的模型地址
-        self.ents_model = load(ents_model_path)
+        self.ents_model_path = ents_model_path
         self.feature_ents_func = feature_ents_func
 
         self.debug = debug
 
     def test(self):
+        # 训练好的模型地址
+        self.ents_model = load(self.ents_model_path)
         test_file = open(self.test_file, 'r', encoding='utf-8').readlines()
         res_file = open(self.output_file, 'w', encoding='utf-8')
         # fea_ents = feature_ents('../coreEntityEmotion_baseline/models/nerDict.txt',

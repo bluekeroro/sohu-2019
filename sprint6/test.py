@@ -6,6 +6,7 @@
 """
 import csv
 import time
+import xgboost as xgb
 import json
 from joblib import load, dump
 from tqdm import tqdm
@@ -19,25 +20,26 @@ class Test():
         self.test_file = test_file
         self.output_file = output_file
         # 训练好的模型地址
-        self.ents_model = load(ents_model_path)
+        self.ents_model_path =ents_model_path
         self.feature_ents_func = feature_ents_func
 
         self.debug = debug
 
     def test(self):
+        print('加载模型',self.ents_model_path)
+        self.ents_model = load(self.ents_model_path)
         test_file = open(self.test_file, 'r', encoding='utf-8').readlines()
         res_file = open(self.output_file, 'w', encoding='utf-8')
-        # fea_ents = feature_ents('../coreEntityEmotion_baseline/models/nerDict.txt',
-        #                         '../coreEntityEmotion_baseline/models/stopwords.txt')
         if self.debug is True:
-            test_file = test_file[:int(len(test_file) / 10)]
+            test_file = test_file[:int(len(test_file) / 10 / 2)]
         for news in tqdm(test_file):
             news = json.loads(news)
             ent_fea = self.feature_ents_func.combine_features(news)
             # 预测实体
             ent_predict_result = []
             for fea in ent_fea:
-                ent_score = self.ents_model.predict([fea[1]])
+                dtest = xgb.DMatrix([fea[1]])
+                ent_score = self.ents_model.predict(dtest)
                 ent_predict_result.append([fea[0][0], ent_score])
 
             ent_predict_result.sort(key=lambda x: x[1], reverse=True)

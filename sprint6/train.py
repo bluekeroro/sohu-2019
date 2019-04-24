@@ -28,28 +28,31 @@ class Train():
         xgb_eval = xgb.DMatrix(valid_x, label=valid_y)
 
         # specify your configurations as a dict
-        params = {
-            'booster': 'gbtree',
-            'objective': 'multi:softmax',
-            'num_class': 10,  # 类数，与 multisoftmax 并用
-            'gamma': 0.1,  # 用于控制是否后剪枝的参数,越大越保守，一般0.1、0.2这样子。
-            'max_depth': 20,
-            'lambda': 2,  # 控制模型复杂度的权重值的L2正则化项参数，参数越大，模型越不容易过拟合。
-            'subsample': 0.7,  # 随机采样训练样本
-            'colsample_bytree': 0.7,  # 生成树时进行的列采样
-            'min_child_weight': 3,
-            'eta': 0.4,
-            'eval_metric': 'merror',
-            'silent': 0,
-            'seed': 1000,
-            'nthread': 4,  # cpu 线程数
-        }
-        # dtrain, dtest = Get_data()
+        # params = {
+        #     'booster': 'gbtree',  #'gbtree',
+        #     'objective': 'multi:softmax',  # multi:softmax
+        #     'num_class': 2,  # 类数，与 multisoftmax 并用
+        #     'gamma': 0.1,  # 用于控制是否后剪枝的参数,越大越保守，一般0.1、0.2这样子。
+        #     'max_depth': 3,
+        #     # 'lambda': 2,  # 控制模型复杂度的权重值的L2正则化项参数，参数越大，模型越不容易过拟合。
+        #     'subsample': 0.7,  # 随机采样训练样本
+        #     'colsample_bytree': 0.2,  # 生成树时进行的列采样
+        #     'min_child_weight': 1,
+        #     'learning_rate': 0.06,
+        #     'eta': 0.1,
+        #     'eval_metric': 'mlogloss',  # mlogloss
+        #     'silent': 0,
+        #     'seed': 27,
+        #     'nthread': 4,  # cpu 线程数
+        # }
+        params = {'max_depth': 2, 'eta': 1, 'silent': 0, 'objective': 'binary:logistic'} # 0.388
+        # params = {'max_depth': 2, 'eta': 1, 'silent': 0, 'objective': 'multi:softmax','num_class': 2} # 0.416
+        # params = {'max_depth': 2, 'eta': 1, 'silent': 0, 'objective': 'multi:softmax', 'num_class': 2}
         watchlist = [(xgb_train, 'train'), (xgb_eval, 'valid')]
         # train
         print("Training xgb model....")
         evals_result = {}
-        gbm = xgb.train(params, xgb_train, evals=watchlist, evals_result=evals_result, num_boost_round=200,
+        gbm = xgb.train(params, xgb_train, evals=watchlist, evals_result=evals_result, num_boost_round=100,
                         early_stopping_rounds=10)
         print('xgb 训练结果 evals_result：', evals_result)
         print("Save model to " + self.model_path)
@@ -58,7 +61,7 @@ class Train():
     def train_ents(self):
         train_data = open(self.train_data_path, 'r', encoding='utf-8').readlines()
         if self.debug is True:
-            train_data = train_data[:int(len(train_data) / 10)]
+            train_data = train_data[:int(len(train_data) / 10 /10)]
         X = []
         Y = []
         cnt = 0
@@ -79,7 +82,8 @@ class Train():
         print("Save features... ")
         dump(X, "models/x1_featrues.joblib")
         dump(Y, "models/y1_featrues.joblib")
-        # X = load("models/x1_featrues.joblib")f
+
+        # X = load("models/x1_featrues.joblib")
         # Y = load("models/y1_featrues.joblib")
         self.model_xgb(X, Y)
         print("done!")
