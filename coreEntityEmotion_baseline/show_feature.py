@@ -52,6 +52,7 @@ if __name__ == '__main__':
     cnt2=0
     cnt3 =0
     cnt4 =0
+    cnt5=0
     errorDataStr=''
     for newsId in tqdm(data):
         if 'entity' not in data[newsId]:
@@ -60,6 +61,8 @@ if __name__ == '__main__':
         if len(data[newsId]['entity'])<3:
             # print(newsId)
             cnt+=1
+            if len(data[newsId]['entity'])<2:
+                cnt5+=1
         if len(data[newsId]['entity'])>3:
             cnt2+=1
         for entity in data[newsId]['entity']:
@@ -80,6 +83,7 @@ if __name__ == '__main__':
     print(errorDataStr)
     print('实体超过三个的数量：', cnt2)
     print('实体不足三个的数量：',cnt)
+    print('实体不足两个的数量：',cnt5)
     print('实体长度为一的数量：',cnt1)
     print('实体不在nerDict.txt中的数量：',cnt3)
     print('包含空格的实体的数量：', cnt4)
