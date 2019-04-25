@@ -5,49 +5,33 @@
 @Author  : Blue Keroro
 """
 import xgboost as xgb
+import lightgbm as lgb
 import time
 import json
 from joblib import load, dump
 from tqdm import tqdm
 import numpy as np
 import re
-from sprint6.features_ents import feature_ents
+from sprint_multi_model_test.features_ents import feature_ents
 from sklearn.model_selection import KFold, train_test_split, GridSearchCV, cross_val_score, ShuffleSplit, \
     StratifiedKFold
 from xgboost.sklearn import XGBRegressor
 
 
 class Train():
-    def __init__(self, train_data_path, model_path, feature_ents_func, debug=False):
+    def __init__(self, train_data_path, model_path_lgb,model_path_xgb, feature_ents_func, debug=False):
         self.train_data_path = train_data_path
-        self.model_path = model_path
+        self.model_path_lgb = model_path_lgb
+        self.model_path_xgb = model_path_xgb
         self.feature_ents_func = feature_ents_func
         self.debug = debug
 
     def model_xgb(self, X, Y):
-        # create dataset for lightgbm
         train_x, valid_x, train_y, valid_y = train_test_split(X, Y, test_size=0.1, random_state=0)  # 分训练集和验证集
         xgb_train = xgb.DMatrix(train_x, label=train_y)
         xgb_eval = xgb.DMatrix(valid_x, label=valid_y)
 
         # specify your configurations as a dict
-        # params = {
-        #     'booster': 'gbtree',  #'gbtree',
-        #     'objective': 'multi:softmax',  # multi:softmax
-        #     'num_class': 2,  # 类数，与 multisoftmax 并用
-        #     'gamma': 0.1,  # 用于控制是否后剪枝的参数,越大越保守，一般0.1、0.2这样子。
-        #     'max_depth': 3,
-        #     # 'lambda': 2,  # 控制模型复杂度的权重值的L2正则化项参数，参数越大，模型越不容易过拟合。
-        #     'subsample': 0.7,  # 随机采样训练样本
-        #     'colsample_bytree': 0.2,  # 生成树时进行的列采样
-        #     'min_child_weight': 1,
-        #     'learning_rate': 0.06,
-        #     'eta': 0.1,
-        #     'eval_metric': 'mlogloss',  # mlogloss
-        #     'silent': 0,
-        #     'seed': 27,
-        #     'nthread': 4,  # cpu 线程数
-        # }
         # params = {'max_depth': 2, 'eta': 1, 'silent': 0, 'objective': 'binary:logistic'}  # 0.421
         params = {'booster': 'gbtree','eta': 0.138, 'max_depth': 2, 'n_estimators': 100,'silent': 0,
                   'objective': 'binary:logistic'} # # 0.439
@@ -58,38 +42,37 @@ class Train():
         gbm = xgb.train(params, xgb_train, evals=watchlist, evals_result=evals_result, num_boost_round=100,
                         early_stopping_rounds=10)
         print('xgb 训练结果 evals_result：', evals_result)
-        print("Save model to " + self.model_path)
-        dump(gbm, self.model_path)
+        print("Save model to " + self.model_path_xgb)
+        dump(gbm, self.model_path_xgb)
 
-    def model_xgb_search(self, X, Y):
-        # train_x, valid_x, train_y, valid_y = train_test_split(X, Y, test_size=0.1, random_state=0)  # 分训练集和验证集
-        print('model_xgb_search start')
-        xgb_model = XGBRegressor(nthread=4)
-        cv_split = ShuffleSplit(n_splits=6, train_size=0.7, test_size=0.2)
-        param_grid = dict(
-            max_depth=[2],
-            min_child_weight= [1, 2, 3, 4, 5, 6],
-            gamma=[0.1, 0.2, 0.3, 0.4, 0.5, 0.6],
-            learning_rate=np.linspace(0.03, 1, 10),
-            n_estimators=[50, 100, 200, 400],
-            num_class=[2],
-            objective=['multi:softmax']
-        )
-        # param_grid = dict(
-        #     max_depth=[1, 2, 3],
-        #     learning_rate=np.linspace(0.03, 0.3, 5),
-        #     n_estimators=[100, 200],
-        #     objective=['binary:logistic']
-        # )
-        # fit_params = {"eval_metric": "rmse"}
-        start = time.time()
-        cv = StratifiedKFold(n_splits=5, shuffle=True)
-        grid = GridSearchCV(xgb_model, param_grid, cv=cv_split)  # scoring='neg_log_loss'
-        grid_result = grid.fit(X, Y)
-        print("Best: %f using params: %s estimator: %s" % (
-            grid_result.best_score_, grid_result.best_params_, grid_result.best_estimator_))
-        print('GridSearchCV process use %.2f seconds' % (time.time() - start))
-        print('end=======')
+    def model_lgb(self, X, Y):
+        # create dataset for lightgbm
+        train_x, valid_x, train_y, valid_y = train_test_split(X, Y, test_size=0.1, random_state=0)  # 分训练集和验证集
+        lgb_train = lgb.Dataset(train_x, train_y)
+        lgb_eval = lgb.Dataset(valid_x, valid_y, reference=lgb_train)
+
+        # specify your configurations as a dict
+        params = {
+            'task': 'train',
+            'boosting_type': 'gbdt',  # 可换为rf(随机森林) dart goss
+            'objective': 'binary',
+            'metric': {'cross_entropy'},  # cross_entropy
+            'num_leaves': 50,
+            'max_depth': 6,  # 3
+            'learning_rate': 0.06,
+            'bagging_fraction': 0.8,
+            'bagging_freq': 5,
+            'seed': 0,
+            # 'min_data_in_leaf ': 100,
+        }  # f1 0.43
+        # train
+        evals_result_dict = {}
+        print("Training lgb model....")
+        gbm = lgb.train(params, lgb_train, num_boost_round=100, valid_sets=[lgb_eval, lgb_train], early_stopping_rounds=10,
+                        valid_names=['eval', 'train'], evals_result=evals_result_dict)
+        print('lgb 训练结果 evals_result：', evals_result_dict)
+        print("Save model to " + self.model_path_lgb)
+        dump(gbm, self.model_path_lgb)
 
     def train_ents(self,load_model=False):
         X = []
@@ -121,6 +104,7 @@ class Train():
             Y = load("models/y1_featrues.joblib")
         # X = load("models/x1_featrues.joblib")
         # Y = load("models/y1_featrues.joblib")
+        self.model_lgb(X, Y)
         self.model_xgb(X, Y)
         # self.model_xgb_search(X, Y)
         print("done!")
@@ -130,5 +114,5 @@ if __name__ == "__main__":
     feature_ents_func = feature_ents('../coreEntityEmotion_baseline/models/nerDict.txt',
                                      '../coreEntityEmotion_baseline/models/stopwords.txt')
     train = Train('../coreEntityEmotion_baseline/data/coreEntityEmotion_train.txt',
-                  'models/model1.joblib', feature_ents_func)
+                  'models/model_test_lgb.joblib', 'models/model1_test_xgb.joblib', feature_ents_func)
     train.train_ents()

@@ -20,4 +20,5 @@ if __name__ == '__main__':
     test = Test('../coreEntityEmotion_baseline/data/coreEntityEmotion_test_stage1.txt',
                 '../coreEntityEmotion_baseline/data/coreEntityEmotion_test_stage1_result.txt',
                 'models/model_xgb.joblib', feature_ents_func)
+    test.test()
     print('end:', time() - start)
