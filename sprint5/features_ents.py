@@ -26,6 +26,7 @@ class feature_ents():
         jieba.analyse.set_stop_words(stopword_file_path)
         self.not_word = '[\n\t，,。`……·\u200b！!?？“”""''~：:;；{}+-——=、/.()（|）%^&*@#$ <>《》【】[]\\]'
         self.key_word_pos = ('ns', 'n', 'vn', 'v', 'l', 'j', 'nr', 'nrt', 'nt', 'nz', 'nrfg', 'an','s')
+        self.feature_data_dict = None
         
     # def set_ners(self, news):
     #     self.ners = set(self.ner.pkuseg_cut(news))

@@ -68,9 +68,9 @@ def get_fenci_feature_func(input_file):
 if __name__ == '__main__':
     feature_ents_func = feature_ents('../coreEntityEmotion_baseline/models/nerDict.txt',
                                      '../coreEntityEmotion_baseline/models/stopwords.txt')
-    save_fenci_feature_func('../coreEntityEmotion_baseline/data/coreEntityEmotion_train.txt',
-                            'result/result_jieba_fenci.txt',
-                            feature_ents_func)
+    # save_fenci_feature_func('../coreEntityEmotion_baseline/data/coreEntityEmotion_train.txt',
+    #                         'result/result_jieba_fenci.txt',
+    #                         feature_ents_func)
     save_fenci_feature_func('../coreEntityEmotion_baseline/data/coreEntityEmotion_test_stage1.txt',
                             'result/result_jieba_fenci.txt',
                             feature_ents_func)

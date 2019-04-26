@@ -9,8 +9,6 @@ import time
 import json
 from joblib import load, dump
 from tqdm import tqdm
-import numpy as np
-import re
 from sprint6.features_ents import feature_ents
 from sklearn.model_selection import KFold, train_test_split, GridSearchCV, cross_val_score, ShuffleSplit, \
     StratifiedKFold
@@ -25,7 +23,7 @@ class Train():
         self.debug = debug
 
     def model_xgb(self, X, Y):
-        # create dataset for lightgbm
+        # create dataset for xgboost
         train_x, valid_x, train_y, valid_y = train_test_split(X, Y, test_size=0.1, random_state=0)  # 分训练集和验证集
         xgb_train = xgb.DMatrix(train_x, label=train_y)
         xgb_eval = xgb.DMatrix(valid_x, label=valid_y)
@@ -63,10 +61,18 @@ class Train():
         print("Save model to " + self.model_path)
         dump(gbm, self.model_path)
 
+    def model_xgb_tmp(self, X, Y):
+        xgb_model = XGBRegressor(gamma=0.3, booster='gbtree', learning_rate=0.6766666666666667, max_depth=2,
+                                 min_child_weight=6,n_estimators=100, num_class=2, objective='multi:softmax', nthread=4)
+        gbm = xgb_model.fit(X, Y)
+        print("Save model to " + self.model_path)
+        dump(gbm, self.model_path)
+
     def model_xgb_search(self, X, Y):
         # train_x, valid_x, train_y, valid_y = train_test_split(X, Y, test_size=0.1, random_state=0)  # 分训练集和验证集
         print('model_xgb_search start')
         xgb_model = XGBRegressor(nthread=4)
+
         cv_split = ShuffleSplit(n_splits=6, train_size=0.7, test_size=0.2)
         # param_grid = dict(
         #     max_depth=[2],
@@ -97,7 +103,6 @@ class Train():
         X = []
         Y = []
         if load_feature_model is False:
-            # train_data = open(self.train_data_path, 'r', encoding='utf-8').readlines()
             train_data = list()
             with open(self.train_data_path, 'r', encoding='utf-8') as file:
                 for line in file:
@@ -123,12 +128,14 @@ class Train():
             print("Save features... ")
             dump(X, "models/x1_featrues.joblib")
             dump(Y, "models/y1_featrues.joblib")
+            print("Save features end... ")
         else:
             X = load("models/x1_featrues.joblib")
             Y = load("models/y1_featrues.joblib")
         # X = load("models/x1_featrues.joblib")
         # Y = load("models/y1_featrues.joblib")
         self.model_xgb(X, Y)
+        # self.model_xgb_tmp(X, Y)
         # self.model_xgb_search(X, Y)
         print("done!")
 

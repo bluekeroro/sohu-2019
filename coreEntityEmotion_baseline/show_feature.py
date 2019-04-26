@@ -23,6 +23,7 @@ def loadTrueData(filePath):
     for line in f.readlines():
         news = json.loads(line.strip())
         data[news['newsId']] = {}
+        data[news['newsId']]['text'] = news['title']+'\n'+news['content']
         data[news['newsId']]['entity'] = []
         data[news['newsId']]['emotion'] = []
         for coreEntityEmotion in news['coreEntityEmotions']:
@@ -53,6 +54,9 @@ if __name__ == '__main__':
     cnt3 =0
     cnt4 =0
     cnt5=0
+    cnt6=0
+    cntSum=0
+    cnt7 = 0
     errorDataStr=''
     for newsId in tqdm(data):
         if 'entity' not in data[newsId]:
@@ -65,8 +69,11 @@ if __name__ == '__main__':
                 cnt5+=1
         if len(data[newsId]['entity'])>3:
             cnt2+=1
+        cntSum+=len(data[newsId]['entity'])
         for entity in data[newsId]['entity']:
             tempSet = set()
+            if '\'' in entity or '\"' in entity:
+                cnt7+=1
             if ' ' in entity:
                 # print(entity)
                 cnt4+=1
@@ -75,16 +82,23 @@ if __name__ == '__main__':
                 # tempSet.add(entity)
             if len(entity)<2:
                 cnt1+=1
-                tempSet.add(entity)
+                # tempSet.add(entity)
             if len(entity)>4:
-                tempSet.add(entity)
+                pass
+                # tempSet.add(entity)
             if len(tempSet)>0:
-                errorDataStr=errorDataStr+newsId+'\t'+','.join(tempSet)+'\n'
-    print(errorDataStr)
+                pass
+                # errorDataStr=errorDataStr+newsId+'\t'+','.join(tempSet)+'\n'
+            if entity not in data[newsId]['text']:
+                cnt6+=1
+    # print(errorDataStr)
     print('实体超过三个的数量：', cnt2)
     print('实体不足三个的数量：',cnt)
     print('实体不足两个的数量：',cnt5)
     print('实体长度为一的数量：',cnt1)
     print('实体不在nerDict.txt中的数量：',cnt3)
     print('包含空格的实体的数量：', cnt4)
+    print('训练集实体总数：',cntSum)
+    print('实体不在文章的百分比：{}%'.format(cnt6/cntSum*100))
+    print('含有非法引号的实体的个数：',cnt7)
     print('end')
