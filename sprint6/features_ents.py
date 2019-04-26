@@ -1,7 +1,7 @@
 import jieba
 import jieba.analyse
 import pkuseg
-from joblib import dump,load
+from joblib import dump, load
 from sklearn.preprocessing import normalize
 from tqdm import tqdm
 import time
@@ -9,8 +9,11 @@ import json
 import re
 import numpy as np
 
+from jieba_fenci_model import fenci
+
+
 class feature_ents():
-    def __init__(self,ner_dict_path,stopword_file_path):
+    def __init__(self, ner_dict_path, stopword_file_path, load_from_file=False):
         self.ner_dict_path = ner_dict_path
         self.stopwords = set()
         self.pku = pkuseg.pkuseg()
@@ -18,17 +21,18 @@ class feature_ents():
             for line in file:
                 self.stopwords.add(line.strip())
         # self.ner = ner()
+        self.load_from_file = load_from_file
         jieba.load_userdict(ner_dict_path)
         jieba.analyse.set_stop_words(stopword_file_path)
         self.not_word = '[\n\t，,。`……·\u200b！!?？“”""''~：:;；{}+-——=、/.()（|）%^&*@#$ <>《》【】[]\\]'
-        self.key_word_pos = ('ns', 'n', 'vn', 'v', 'l', 'j', 'nr', 'nrt', 'nt', 'nz', 'nrfg', 'an','s')
-        
+        self.key_word_pos = ('ns', 'n', 'vn', 'v', 'l', 'j', 'nr', 'nrt', 'nt', 'nz', 'nrfg', 'an', 's')
+
     # def set_ners(self, news):
     #     self.ners = set(self.ner.pkuseg_cut(news))
-        
+
     # def get_ners(self):
     #     return self.ners
-   
+
     # tfidf分数
     def get_tfidf_Score(self, news):
         title = news['title']
@@ -44,9 +48,9 @@ class feature_ents():
         title_words = jieba.analyse.extract_tags(title, topK=40, withWeight=True)
         content_words_merge = {}
         title_words_merge = {}
-        mergeWords = []
+        mergeWords = set()
         for index, word in enumerate(content_words):
-            if index > 0 and word[1] == content_words[index - 1][1] and word[1]>0:
+            if index > 0 and word[1] == content_words[index - 1][1] and word[1] > 0:
                 if (not self.isWord(word[0])) or (not self.isWord(content_words[index - 1][0])):
                     continue
                 merge_str = self.ban_escape_char(word[0]) + '.*' + self.ban_escape_char(content_words[index - 1][0])
@@ -56,9 +60,9 @@ class feature_ents():
                         break
                     merge_str += '.*' + self.ban_escape_char(content_words[tmp_index][0])
                     tmp_index += 1
-                mergeWords.append(merge_str)
+                mergeWords.add(merge_str)
         for index, word in enumerate(title_words):
-            if index > 0 and word[1] == title_words[index - 1][1] and word[1]>0:
+            if index > 0 and word[1] == title_words[index - 1][1] and word[1] > 0:
                 if (not self.isWord(word[0])) or (not self.isWord(title_words[index - 1][0])):
                     continue
                 merge_str = self.ban_escape_char(word[0]) + '.*' + self.ban_escape_char(title_words[index - 1][0])
@@ -68,7 +72,7 @@ class feature_ents():
                         break
                     merge_str += '.*' + self.ban_escape_char(title_words[tmp_index][0])
                     tmp_index += 1
-                mergeWords.append(merge_str)
+                mergeWords.add(merge_str)
         for mergeWord in mergeWords:
             re_words = re.findall(mergeWord, title + '\t' + content)
             for re_word in re_words:
@@ -87,10 +91,10 @@ class feature_ents():
         for key in list(title_words):
             if not self.isWord(key):
                 title_words.pop(key)
-        return content_words,title_words
+        return content_words, title_words
 
     # textRank分数
-    def get_textRank_Score(self,news):
+    def get_textRank_Score(self, news):
         title = news['title']
         content = news['content']
         specialWords = set(re.findall(r'《.*》', title + '\t' + content)) \
@@ -100,11 +104,12 @@ class feature_ents():
             word = word.replace('《', '').replace('》', '').replace('[', '') \
                 .replace(']', '').replace('【', '').replace('】', '')
             jieba.add_word(word)
-        content_words = jieba.analyse.textrank(content, topK=40, withWeight=True,allowPOS=self.key_word_pos)  # [(,),...]
-        title_words = jieba.analyse.textrank(title, topK=40, withWeight=True,allowPOS=self.key_word_pos)
+        content_words = jieba.analyse.textrank(content, topK=40, withWeight=True,
+                                               allowPOS=self.key_word_pos)  # [(,),...]
+        title_words = jieba.analyse.textrank(title, topK=40, withWeight=True, allowPOS=self.key_word_pos)
         content_words_merge = {}
         title_words_merge = {}
-        mergeWords = []
+        mergeWords = set()
         for index, word in enumerate(content_words):
             if index > 0 and word[1] == content_words[index - 1][1] and word[1] > 0:
                 if (not self.isWord(word[0])) or (not self.isWord(content_words[index - 1][0])):
@@ -116,7 +121,7 @@ class feature_ents():
                         break
                     merge_str += '.*' + self.ban_escape_char(content_words[tmp_index][0])
                     tmp_index += 1
-                mergeWords.append(merge_str)
+                mergeWords.add(merge_str)
         for index, word in enumerate(title_words):
             if index > 0 and word[1] == title_words[index - 1][1] and word[1] > 0:
                 if (not self.isWord(word[0])) or (not self.isWord(title_words[index - 1][0])):
@@ -128,15 +133,15 @@ class feature_ents():
                         break
                     merge_str += '.*' + self.ban_escape_char(title_words[tmp_index][0])
                     tmp_index += 1
-                mergeWords.append(merge_str)
+                mergeWords.add(merge_str)
         for mergeWord in mergeWords:
             re_words = re.findall(mergeWord, title + '\t' + content)
             for re_word in re_words:
                 if len(re_word) > 0:
                     jieba.add_word(re_word)
         content_words_merge = dict(
-            jieba.analyse.textrank(content, topK=40, withWeight=True,allowPOS=self.key_word_pos))  # [(,),...]
-        title_words_merge = dict(jieba.analyse.textrank(title, topK=40, withWeight=True,allowPOS=self.key_word_pos))
+            jieba.analyse.textrank(content, topK=40, withWeight=True, allowPOS=self.key_word_pos))  # [(,),...]
+        title_words_merge = dict(jieba.analyse.textrank(title, topK=40, withWeight=True, allowPOS=self.key_word_pos))
         content_words = dict(content_words)
         content_words.update(content_words_merge)
         title_words = dict(title_words)
@@ -148,21 +153,29 @@ class feature_ents():
             if not self.isWord(key):
                 title_words.pop(key)
         return content_words, title_words
-    
+
     # 把特征接到一起
     def combine_features(self, news):
+        features = []
+        if self.load_from_file is True:
+            if self.feature_data_dict is None:
+                self.feature_data_dict = fenci.get_fenci_feature_func(
+                    '../jieba_fenci_model/result/result_jieba_fenci.txt')
+            for ner in self.feature_data_dict[news['newsId']]:
+                features.append(
+                    [[ner], self.feature_data_dict[news['newsId']][ner] + [len(ner), self.num_of_not_word(ner)]])
+            return features
+
         content_words_tfidf, title_words_tfidf = self.get_tfidf_Score(news)
         content_words_textRank, title_words_textRank = self.get_textRank_Score(news)
-        # content_words_tfidf = content_words_textRank
-        # title_words_tfidf = title_words_textRank
-        keys = content_words_tfidf.keys()|title_words_tfidf.keys()|content_words_textRank.keys()|title_words_textRank.keys()
-        features = []
+        keys = content_words_tfidf.keys() | title_words_tfidf.keys() | content_words_textRank.keys() | title_words_textRank.keys()
         for ner in keys:
-            features.append([[ner],[content_words_tfidf[ner] if ner in content_words_tfidf else 0,
-                                    title_words_tfidf[ner] if ner in title_words_tfidf else 0,
-                                    content_words_textRank[ner] if ner in content_words_textRank else 0,
-                                    title_words_textRank[ner] if ner in title_words_textRank else 0,
-                                    len(ner),self.num_of_not_word(ner)]]) # 特征：正文中的tfidf，标题中的tfidf，实体的长度,含有符号的个数
+            features.append([[ner], [content_words_tfidf[ner] if ner in content_words_tfidf else 0,
+                                     title_words_tfidf[ner] if ner in title_words_tfidf else 0,
+                                     content_words_textRank[ner] if ner in content_words_textRank else 0,
+                                     title_words_textRank[ner] if ner in title_words_textRank else 0,
+                                     len(ner), self.num_of_not_word(ner)]])  # 特征：正文中的tfidf，标题中的tfidf，实体的长度,含有符号的个数
+        return features
         # self.num_of_not_word(ner)
         # 正则化 （效果差）
         # feature_matrix = [feature[1] for feature in features]
@@ -175,7 +188,6 @@ class feature_ents():
         #     if ner in tfidf: #0
         #         a = tfidf[ner]
         #     features.append([[ner],[a]])  #特征可以继续添加 b,c,d,e,f,g......
-        return features
 
     def pkuseg_cut(self, news):
         title = news['title']
@@ -210,9 +222,9 @@ class feature_ents():
             ret_str += ch
         return ret_str
 
-    def num_of_not_word(self,str_input):
-        cnt=0
+    def num_of_not_word(self, str_input):
+        cnt = 0
         for ch in str_input:
             if ch in self.not_word:
-                cnt+=1
+                cnt += 1
         return cnt

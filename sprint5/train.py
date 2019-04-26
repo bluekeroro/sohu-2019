@@ -44,14 +44,21 @@ class Train():
         # train
         evals_result_dict = {}
         print("Training lgb model....")
-        gbm = lgb.train(params, lgb_train, num_boost_round=100, valid_sets=[lgb_eval, lgb_train], early_stopping_rounds=10,
+        gbm = lgb.train(params, lgb_train, num_boost_round=100, valid_sets=[lgb_eval, lgb_train],
+                        early_stopping_rounds=10,
                         valid_names=['eval', 'train'], evals_result=evals_result_dict)
         print('lgb 训练结果 evals_result：', evals_result_dict)
         print("Save model to " + self.model_path)
         dump(gbm, self.model_path)
 
     def train_ents(self):
-        train_data = open(self.train_data_path, 'r', encoding='utf-8').readlines()
+        # train_data = open(self.train_data_path, 'r', encoding='utf-8').readlines()
+        train_data = list()
+        with open(self.train_data_path, 'r', encoding='utf-8') as file:
+            for line in file:
+                line = line.strip()
+                train_data.append(line)
+
         if self.debug is True:
             train_data = train_data[:int(len(train_data) / 10 / 10)]
         X = []
@@ -74,7 +81,7 @@ class Train():
         print("Save features... ")
         dump(X, "models/x1_featrues.joblib")
         dump(Y, "models/y1_featrues.joblib")
-        # X = load("models/x1_featrues.joblib")f
+        # X = load("models/x1_featrues.joblib")
         # Y = load("models/y1_featrues.joblib")
         self.model_lgb(X, Y)
         print("done!")

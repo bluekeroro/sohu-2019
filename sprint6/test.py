@@ -28,7 +28,12 @@ class Test():
     def test(self):
         print('加载模型',self.ents_model_path)
         self.ents_model = load(self.ents_model_path)
-        test_file = open(self.test_file, 'r', encoding='utf-8').readlines()
+        # test_file = open(self.test_file, 'r', encoding='utf-8').readlines()
+        test_file = []
+        with open(self.test_file, 'r', encoding='utf-8') as file:
+            for line in file:
+                line = line.strip()
+                test_file.append(line)
         res_file = open(self.output_file, 'w', encoding='utf-8')
         if self.debug is True:
             test_file = test_file[:int(len(test_file) / 10 / 2)]
@@ -49,6 +54,7 @@ class Test():
             emos = ['POS' for i in ents[:3]]
             res_file.write('{}\t{}\t{}\n'.format(news['newsId'], ','.join(ents), ','.join(emos)))
         print("done")
+        res_file.close()
 
     def delete_mark(self, str_input):
         # 处理书名号

@@ -49,8 +49,10 @@ class Train():
         #     'nthread': 4,  # cpu 线程数
         # }
         # params = {'max_depth': 2, 'eta': 1, 'silent': 0, 'objective': 'binary:logistic'}  # 0.421
-        params = {'booster': 'gbtree','eta': 0.138, 'max_depth': 2, 'n_estimators': 100,'silent': 0,
-                  'objective': 'binary:logistic'} # # 0.439
+        params = {'booster': 'gbtree', 'eta': 0.138, 'max_depth': 2, 'n_estimators': 100, 'silent': 0,
+                  'objective': 'binary:logistic'}  # 0.439
+        # params = {'gamma': 0.3, 'booster': 'gbtree', 'eta': 0.6766666666666667, 'max_depth': 2, 'min_child_weight': 6,
+        #           'n_estimators': 100, 'silent': 0, 'num_class': 2, 'objective': 'multi:softmax'}
         watchlist = [(xgb_train, 'train'), (xgb_eval, 'valid')]
         # train
         print("Training xgb model....")
@@ -66,22 +68,22 @@ class Train():
         print('model_xgb_search start')
         xgb_model = XGBRegressor(nthread=4)
         cv_split = ShuffleSplit(n_splits=6, train_size=0.7, test_size=0.2)
-        param_grid = dict(
-            max_depth=[2],
-            min_child_weight= [1, 2, 3, 4, 5, 6],
-            gamma=[0.1, 0.2, 0.3, 0.4, 0.5, 0.6],
-            learning_rate=np.linspace(0.03, 1, 10),
-            n_estimators=[50, 100, 200, 400],
-            num_class=[2],
-            objective=['multi:softmax']
-        )
         # param_grid = dict(
-        #     max_depth=[1, 2, 3],
-        #     learning_rate=np.linspace(0.03, 0.3, 5),
-        #     n_estimators=[100, 200],
-        #     objective=['binary:logistic']
+        #     max_depth=[2],
+        #     min_child_weight= [1, 2, 3, 4, 5, 6],
+        #     gamma=[0.1, 0.2, 0.3, 0.4, 0.5, 0.6],
+        #     learning_rate=np.linspace(0.03, 1, 10),
+        #     n_estimators=[50, 100, 200, 400],
+        #     num_class=[2],
+        #     objective=['multi:softmax']
         # )
-        # fit_params = {"eval_metric": "rmse"}
+        param_grid = dict(
+            max_depth=[1, 2, 3],
+            # learning_rate=np.linspace(0.03, 0.3, 5),
+            n_estimators=[100, 200],
+            num_class=[2],
+            objective=['multi:softmax']  # 'binary:logistic'
+        )
         start = time.time()
         cv = StratifiedKFold(n_splits=5, shuffle=True)
         grid = GridSearchCV(xgb_model, param_grid, cv=cv_split)  # scoring='neg_log_loss'
@@ -91,11 +93,16 @@ class Train():
         print('GridSearchCV process use %.2f seconds' % (time.time() - start))
         print('end=======')
 
-    def train_ents(self,load_model=False):
+    def train_ents(self, load_feature_model=False):
         X = []
         Y = []
-        if load_model is False:
-            train_data = open(self.train_data_path, 'r', encoding='utf-8').readlines()
+        if load_feature_model is False:
+            # train_data = open(self.train_data_path, 'r', encoding='utf-8').readlines()
+            train_data = list()
+            with open(self.train_data_path, 'r', encoding='utf-8') as file:
+                for line in file:
+                    line = line.strip()
+                    train_data.append(line)
             if self.debug is True:
                 train_data = train_data[:int(len(train_data) / 10 / 10)]
             cnt = 0
