@@ -163,7 +163,19 @@ class feature_ents():
                     '../jieba_fenci_model/result/result_jieba_fenci.txt')
             for ner in self.feature_data_dict[news['newsId']]:
                 features.append(
-                    [[ner], self.feature_data_dict[news['newsId']][ner] + [len(ner), self.num_of_not_word(ner)]])
+                    [[ner], self.feature_data_dict[news['newsId']][ner] + [len(ner),
+                                                                           self.num_of_not_word(ner),
+                                                                           news['content'].count(ner),  # 正文中的词频
+                                                                           news['title'].count(ner),  # title中的词频
+                                                                           (news['title'] + news['content']).count(ner),
+                                                                           # 总的词频
+                                                                           (news['title'] + news['content']).index(ner),
+                                                                           # 关键词第一次出现的位置
+                                                                           (news['title'] + news['content']).rindex(
+                                                                               ner),  # 关键词最后一次出现的位置
+                                                                           len(news['title']),  # 标题的长度
+                                                                           len(news['content'])  # 正文的长度
+                                                                           ]])
             return features
         content_words_tfidf, title_words_tfidf = self.get_tfidf_Score(news)
         content_words_textRank, title_words_textRank = self.get_textRank_Score(news)

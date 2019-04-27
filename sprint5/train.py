@@ -12,6 +12,7 @@ from tqdm import tqdm
 import re
 from sprint5.features_ents import feature_ents
 from sklearn.model_selection import train_test_split
+from lightgbm.sklearn import LGBMRegressor
 
 
 class Train():
@@ -33,8 +34,8 @@ class Train():
             'boosting_type': 'gbdt',  # 可换为rf(随机森林) dart goss
             'objective': 'binary',
             'metric': {'cross_entropy'},  # cross_entropy
-            'num_leaves': 50,
-            'max_depth': 6,  # 3
+            'num_leaves': 80,  # 50
+            # 'max_depth': 6,  # 6
             'learning_rate': 0.06,
             'bagging_fraction': 0.8,
             'bagging_freq': 5,

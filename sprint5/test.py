@@ -57,11 +57,12 @@ class Test():
                 pass
             # 选前三个实体
             entity_list = [entity for entity in ent_predict_result[:3]]
-            # if len(entity_list) > 2:
-            #     if entity_list[2][1] < 0.19:
-            #         entity_list.remove(entity_list[2])
-            #         if entity_list[1][1] < 0.28:
-            #             entity_list.remove(entity_list[1])
+            if len(entity_list) > 2:
+                if entity_list[2][1] < 0.18:
+                    entity_list.remove(entity_list[2])
+                    if entity_list[1][1] < 0.28:
+                        entity_list.remove(entity_list[1])
+
             ents = [self.delete_mark(entity[0]) for entity in entity_list[:3]]
             emos = ['POS' for i in ents[:3]]
             res_file.write('{}\t{}\t{}\n'.format(news['newsId'], ','.join(ents), ','.join(emos)))
