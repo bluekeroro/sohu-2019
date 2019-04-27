@@ -38,8 +38,6 @@ class feature_ents():
     def get_tfidf_Score(self, news):
         title = news['title']
         content = news['content']
-        # content = '昨天下午，redmi正式发布了“小金刚”升级版redminote7pro，这是redmi独立运营后召开的第二场新品发布会，也是卢伟冰入职小米以后的首秀。\n\n首次代表redmi登台亮相的卢伟冰在发布会现场喊出而来“redmi就是性价比之王”的口号，那么redmi的产品表现究竟能不能配得上这个称号呢？在介绍remdinote7pro之前，我们不妨来回顾一下小金刚的表现。小金刚在发布不到一个月便实现了国内销量突破100万的成绩，同时还打破了12个月质保的传统，首次将质保提到了18个月，全新的标准彰显出了小米对品质的信心。同时，小金刚也几乎以一己之力拔高了国内千元机市场对性能、拍照等方面的水准。以小金刚的表现来看，性价比之王的称号已经当之无愧。\n\n不过对于note7的综合表现还是有一些小遗憾，因为这款手机的处理器还是骁龙660，主摄传感器也是用的三星gm1，同时还没有128gb的版本，所以为了填补这份遗憾，redminote7pro应运而生。\n\nredminote7pro除了将处理器升级为对游戏用户更友好的骁龙675之外，最大的亮点就是将相机传感器由三星gm1升级到了索尼imx586。前者是今天发布的vivox27上采用的，999元的小金刚redminote7同款，后者是荣耀v20同款，但是荣耀v20只是单摄，所以成像表现上并不及redminote7pro。而且这两款产品都是3000元起跳的产品。\n\nredminote7pro内置6+128gb的运存组合，电池容量内置4000mah大电池，支持18w快充并标配快充充电头。此外note7pro的整机都加入了p2i生活防泼溅，可以有效防止雨水淋湿、意外溅水等各种问题，降低手机的受潮损坏率。\n\n从上述参数标准可以看出，redminote7pro不仅在其1599元这个价位没有任何对手，而且即便放到友商3000元档位的产品对比中，redminote7pro同样也有自己的优势，所谓的性价比和友商无关，所言非虚。'
-        # title = '性价比和友商无关，红米note7 pro诠释什么是性价比之王'
         specialWords = set(re.findall(r'《.*》', title + '\t' + content)) \
                        | set(re.findall(r'[.*]', title + '\t' + content)) \
                        | set(re.findall(r'【.*】', title + '\t' + content))
@@ -178,7 +176,15 @@ class feature_ents():
                                     title_words_tfidf[ner] if ner in title_words_tfidf else 0,
                                     content_words_textRank[ner] if ner in content_words_textRank else 0,
                                     title_words_textRank[ner] if ner in title_words_textRank else 0,
-                                    len(ner),self.num_of_not_word(ner)]]) # 特征：正文中的tfidf，标题中的tfidf，实体的长度,含有符号的个数
+                                    len(ner),self.num_of_not_word(ner),  # 特征：正文中的tfidf，标题中的tfidf，实体的长度,含有符号的个数
+                                    news['content'].count(ner),  # 正文中的词频
+                                    news['title'].count(ner),  # title中的词频
+                                    (news['title'] + news['content']).count(ner),  # 总的词频
+                                    (news['title'] + news['content']).index(ner),  # 关键词第一次出现的位置
+                                    (news['title'] + news['content']).rindex(ner),  # 关键词最后一次出现的位置
+                                    len(news['title']),  # 标题的长度
+                                    len(news['content'])  # 正文的长度
+                                    ]])
         # self.num_of_not_word(ner)
         # 正则化 （效果差）
         # feature_matrix = [feature[1] for feature in features]

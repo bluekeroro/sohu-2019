@@ -4,20 +4,35 @@
 @Time    : 2019/4/17 16:05
 @Author  : Blue Keroro
 """
+import sys
+import os
+
+curPath = os.path.abspath(os.path.dirname(__file__))
+rootPath = os.path.split(curPath)[0]
+sys.path.append(rootPath)
+
 from sprint6.features_ents import feature_ents
 from sprint6.test import Test
 from data_split import data_split
-from f1_score import computeF1Score
+from f1_score import *
 from sprint6.train import Train
 
 
-def accuracy(train, test):
+def accuracy(train, test,feature_ents_func):
     turn = 4
     entityScoreSum = 0
     emotionScoreSum = 0
     for i in range(turn):
         # 切分数据
         data_split('../coreEntityEmotion_baseline/data', 'coreEntityEmotion_train.txt')
+
+        # trueData = loadTrueData('../coreEntityEmotion_baseline/data/8_coreEntityEmotion_train.txt')
+        # entity_list= []
+        # for newsId in trueData:
+        #     entity_list+= trueData[newsId]['entity']
+        #
+        # feature_ents_func.set_train_data_entity(entity_list)
+
         # 训练
         train.train_ents()
         # 测试
@@ -46,5 +61,5 @@ if __name__ == '__main__':
     test = Test('../coreEntityEmotion_baseline/data/2_coreEntityEmotion_train.txt',
                 '../coreEntityEmotion_baseline/data/2_coreEntityEmotion_train_result.txt',
                 model_path,feature_ents_func,debug=True)
-    accuracy(train,test)
+    accuracy(train,test,feature_ents_func)
     print('end:', time() - start)

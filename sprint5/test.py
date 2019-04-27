@@ -12,6 +12,7 @@ from joblib import load, dump
 from tqdm import tqdm
 import re
 from sprint5.features_ents import feature_ents
+import numpy as np
 
 
 class Test():
@@ -34,8 +35,7 @@ class Test():
                 line = line.strip()
                 test_file.append(line)
         res_file = open(self.output_file, 'w', encoding='utf-8')
-        # fea_ents = feature_ents('../coreEntityEmotion_baseline/models/nerDict.txt',
-        #                         '../coreEntityEmotion_baseline/models/stopwords.txt')
+        pred_score = [[] for i in range(3)]
         if self.debug is True:
             test_file = test_file[:int(len(test_file) / 10)]
         for news in tqdm(test_file):
@@ -49,10 +49,28 @@ class Test():
 
             ent_predict_result.sort(key=lambda x: x[1], reverse=True)
 
+            try:
+                pred_score[0].append(ent_predict_result[0][1])
+                pred_score[1].append(ent_predict_result[1][1])
+                pred_score[2].append(ent_predict_result[2][1])
+            except IndexError:
+                pass
             # 选前三个实体
-            ents = [self.delete_mark(entity[0]) for entity in ent_predict_result[:3]]
+            entity_list = [entity for entity in ent_predict_result[:3]]
+            # if len(entity_list) > 2:
+            #     if entity_list[2][1] < 0.19:
+            #         entity_list.remove(entity_list[2])
+            #         if entity_list[1][1] < 0.28:
+            #             entity_list.remove(entity_list[1])
+            ents = [self.delete_mark(entity[0]) for entity in entity_list[:3]]
             emos = ['POS' for i in ents[:3]]
             res_file.write('{}\t{}\t{}\n'.format(news['newsId'], ','.join(ents), ','.join(emos)))
+        print("第1关键词的平均值:", np.average(pred_score[0]), '中位数：', np.median(pred_score[0]), '最大值：', np.max(pred_score[0]),
+              '最小值：', np.min(pred_score[0]))
+        print("第2关键词的平均值:", np.average(pred_score[1]), '中位数：', np.median(pred_score[1]), '最大值：', np.max(pred_score[1]),
+              '最小值：', np.min(pred_score[1]))
+        print("第3关键词的平均值:", np.average(pred_score[2]), '中位数：', np.median(pred_score[2]), '最大值：', np.max(pred_score[2]),
+              '最小值：', np.min(pred_score[2]))
         print("done")
         res_file.close()
 

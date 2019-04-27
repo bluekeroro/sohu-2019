@@ -12,7 +12,7 @@ from tqdm import tqdm
 from sprint6.features_ents import feature_ents
 from sklearn.model_selection import KFold, train_test_split, GridSearchCV, cross_val_score, ShuffleSplit, \
     StratifiedKFold
-from xgboost.sklearn import XGBRegressor
+from xgboost.sklearn import XGBRegressor,XGBClassifier
 
 
 class Train():
@@ -109,7 +109,7 @@ class Train():
                     line = line.strip()
                     train_data.append(line)
             if self.debug is True:
-                train_data = train_data[:int(len(train_data) / 10 / 10)]
+                train_data = train_data[:int(len(train_data) / 10 /10)]
             cnt = 0
             cntSum = 0
             for news in tqdm(train_data):

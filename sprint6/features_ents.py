@@ -1,13 +1,7 @@
 import jieba
 import jieba.analyse
 import pkuseg
-from joblib import dump, load
-from sklearn.preprocessing import normalize
-from tqdm import tqdm
-import time
-import json
 import re
-import numpy as np
 
 from jieba_fenci_model import fenci
 
@@ -27,6 +21,10 @@ class feature_ents():
         self.not_word = '[\n\t，,。`……·\u200b！!?？“”""''~：:;；{}+-——=、/.()（|）%^&*@#$ <>《》【】[]\\]'
         self.key_word_pos = ('ns', 'n', 'vn', 'v', 'l', 'j', 'nr', 'nrt', 'nt', 'nz', 'nrfg', 'an', 's')
         self.feature_data_dict = None
+        self.train_data_entity = None
+
+    def set_train_data_entity(self, train_data_entity):
+        self.train_data_entity = train_data_entity
 
     # tfidf分数
     def get_tfidf_Score(self, news):
@@ -152,24 +150,48 @@ class feature_ents():
     # 把特征接到一起
     def combine_features(self, news):
         features = []
+        # print("combine_features 训练集的关键词：",self.train_data_entity[:10])
         if self.load_from_file is True:
             if self.feature_data_dict is None:
                 self.feature_data_dict = fenci.get_fenci_feature_func(
                     '../jieba_fenci_model/result/result_jieba_fenci.txt')
             for ner in self.feature_data_dict[news['newsId']]:
                 features.append(
-                    [[ner], self.feature_data_dict[news['newsId']][ner] + [len(ner), self.num_of_not_word(ner)]])
+                    [[ner], self.feature_data_dict[news['newsId']][ner] + [len(ner),
+                                                                           self.num_of_not_word(ner),
+                                                                           news['content'].count(ner),  # 正文中的词频
+                                                                           news['title'].count(ner),  # title中的词频
+                                                                           (news['title'] + news['content']).count(ner),
+                                                                           # 总的词频
+                                                                           (news['title'] + news['content']).index(ner),
+                                                                           # 关键词第一次出现的位置
+                                                                           (news['title'] + news['content']).rindex(ner),
+                                                                           # 关键词最后一次出现的位置
+                                                                           len(news['title']),  # 标题的长度
+                                                                           len(news['content'])  # 正文的长度
+                                                                           ]])
             return features
 
         content_words_tfidf, title_words_tfidf = self.get_tfidf_Score(news)
         content_words_textRank, title_words_textRank = self.get_textRank_Score(news)
         keys = content_words_tfidf.keys() | title_words_tfidf.keys() | content_words_textRank.keys() | title_words_textRank.keys()
         for ner in keys:
-            features.append([[ner], [content_words_tfidf[ner] if ner in content_words_tfidf else 0,
-                                     title_words_tfidf[ner] if ner in title_words_tfidf else 0,
+            features.append([[ner], [content_words_tfidf[ner] if ner in content_words_tfidf else 0,  # 特征：正文中的tfidf
+                                     title_words_tfidf[ner] if ner in title_words_tfidf else 0,  # 标题中的tfidf
                                      content_words_textRank[ner] if ner in content_words_textRank else 0,
-                                     title_words_textRank[ner] if ner in title_words_textRank else 0,
-                                     len(ner), self.num_of_not_word(ner)]])  # 特征：正文中的tfidf，标题中的tfidf，实体的长度,含有符号的个数
+                                     # 特征：正文中的textRank
+                                     title_words_textRank[ner] if ner in title_words_textRank else 0,  # 标题中的textRank
+                                     len(ner),  # 实体的长度
+                                     self.num_of_not_word(ner),  # 含有符号的个数
+                                     news['content'].count(ner),  # 正文中的词频
+                                     news['title'].count(ner),  # title中的词频
+                                     (news['title'] + news['content']).count(ner),  # 总的词频
+                                     (news['title'] + news['content']).index(ner),  # 关键词第一次出现的位置
+                                     (news['title'] + news['content']).rindex(ner),  # 关键词最后一次出现的位置
+                                     len(news['title']),      # 标题的长度
+                                     len(news['content'])     # 正文的长度
+                                     # self.train_data_entity.count(ner)/len(self.train_data_entity)  # 关键词在训练集中的概率 (效果差)
+                                     ]])
         return features
         # self.num_of_not_word(ner)
         # 正则化 （效果差）

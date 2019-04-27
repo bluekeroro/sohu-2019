@@ -4,6 +4,13 @@
 @Time    : 2019/4/17 16:05
 @Author  : Blue Keroro
 """
+import sys
+import os
+
+curPath = os.path.abspath(os.path.dirname(__file__))
+rootPath = os.path.split(curPath)[0]
+sys.path.append(rootPath)
+
 from sprint5.features_ents import feature_ents
 from sprint5.test import Test
 from data_split import data_split
