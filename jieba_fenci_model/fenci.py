@@ -48,7 +48,11 @@ def save_fenci_feature_func(input_file, output_file, feature_ents_func):
             features = [content_words_tfidf[ner] if ner in content_words_tfidf else 0,
                         title_words_tfidf[ner] if ner in title_words_tfidf else 0,
                         content_words_textRank[ner] if ner in content_words_textRank else 0,
-                        title_words_textRank[ner] if ner in title_words_textRank else 0]   # 可增加新的特征
+                        title_words_textRank[ner] if ner in title_words_textRank else 0,
+                        (feature_ents_func.key_word_pos.index(feature_ents_func.word_pos[ner])
+                         if (ner in feature_ents_func.word_pos
+                             and feature_ents_func.word_pos[ner] in feature_ents_func.key_word_pos)
+                         else feature_ents_func.key_word_pos.index('n')) * 0.1]  # 可增加新的特征
             ner_dict[news['newsId']][ner] = features
         result.write(str(ner_dict) + '\n')
     result.close()

@@ -18,7 +18,7 @@ from tqdm import tqdm
 from sprint6_xgb_sklean.features_ents import feature_ents
 from sklearn.model_selection import KFold, train_test_split, GridSearchCV, cross_val_score, ShuffleSplit, \
     StratifiedKFold
-from xgboost.sklearn import XGBRegressor, XGBClassifier
+from xgboost.sklearn import XGBRegressor
 
 
 class Train():
@@ -42,7 +42,7 @@ class Train():
         print('model_xgb_search start')
         xgb_model = XGBRegressor(nthread=4)
 
-        cv_split = ShuffleSplit(n_splits=6, train_size=0.7, test_size=0.2)
+        cv_split = ShuffleSplit(n_splits=5, train_size=0.7, test_size=0.2)
         # param_grid = dict(
         #     max_depth=[2],
         #     min_child_weight= [1, 2, 3, 4, 5, 6],

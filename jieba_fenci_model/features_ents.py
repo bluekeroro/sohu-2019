@@ -13,7 +13,9 @@ class feature_ents():
         jieba.load_userdict(ner_dict_path)
         jieba.analyse.set_stop_words(stopword_file_path)
         self.not_word = '[\n\t，,。`……·\u200b！!?？“”""''~：:;；{}+-——=、/.()（|）%^&*@#$ <>《》【】[]\\]'
-        self.key_word_pos = ('ns', 'n', 'vn', 'v', 'l', 'j', 'nr', 'nrt', 'nt', 'nz', 'nrfg', 'an', 's')
+        self.key_word_pos = ('n', 'nr', 'nr1', 'nr2', 'nrj', 'nrf', 'ns', 'nsf',
+                             'nt', 'nz', 'nl', 'ng', 'vn', 'v', 'an', 's', 'f', 't', 'tg')
+        self.word_pos = dict()
 
     # tfidf分数
     def get_tfidf_Score(self, news):
@@ -60,9 +62,12 @@ class feature_ents():
             for re_word in re_words:
                 if len(re_word) > 0:
                     jieba.add_word(re_word)
-        content_words_merge = dict(
-            jieba.analyse.extract_tags(content, topK=40, withWeight=True))  # [(,),...]
-        title_words_merge = dict(jieba.analyse.extract_tags(title, topK=40, withWeight=True))
+        content_words_merge = dict(self.paser_jieba(
+            jieba.analyse.extract_tags(content, topK=40, withWeight=True, allowPOS=self.key_word_pos, withFlag=True),
+            self.word_pos))  # [(,),...]
+        title_words_merge = dict(self.paser_jieba(
+            jieba.analyse.extract_tags(title, topK=40, withWeight=True, allowPOS=self.key_word_pos, withFlag=True),
+            self.word_pos))
         content_words = dict(content_words)
         content_words.update(content_words_merge)
         title_words = dict(title_words)
@@ -86,9 +91,12 @@ class feature_ents():
             word = word.replace('《', '').replace('》', '').replace('[', '') \
                 .replace(']', '').replace('【', '').replace('】', '')
             jieba.add_word(word)
-        content_words = jieba.analyse.textrank(content, topK=40, withWeight=True,
-                                               allowPOS=self.key_word_pos)  # [(,),...]
-        title_words = jieba.analyse.textrank(title, topK=40, withWeight=True, allowPOS=self.key_word_pos)
+        content_words = self.paser_jieba(jieba.analyse.textrank(content, topK=40, withWeight=True,
+                                                                allowPOS=self.key_word_pos, withFlag=True),
+                                         self.word_pos)  # [(,),...]
+        title_words = self.paser_jieba(
+            jieba.analyse.textrank(title, topK=40, withWeight=True, allowPOS=self.key_word_pos, withFlag=True),
+            self.word_pos)
         content_words_merge = {}
         title_words_merge = {}
         mergeWords = set()
@@ -122,8 +130,13 @@ class feature_ents():
                 if len(re_word) > 0:
                     jieba.add_word(re_word)
         content_words_merge = dict(
-            jieba.analyse.textrank(content, topK=40, withWeight=True, allowPOS=self.key_word_pos))  # [(,),...]
-        title_words_merge = dict(jieba.analyse.textrank(title, topK=40, withWeight=True, allowPOS=self.key_word_pos))
+            self.paser_jieba(
+                jieba.analyse.textrank(content, topK=40, withWeight=True, allowPOS=self.key_word_pos, withFlag=True),
+                self.word_pos))  # [(,),...]
+        title_words_merge = dict(
+            self.paser_jieba(
+                jieba.analyse.textrank(title, topK=40, withWeight=True, allowPOS=self.key_word_pos, withFlag=True),
+                self.word_pos))
         content_words = dict(content_words)
         content_words.update(content_words_merge)
         title_words = dict(title_words)
@@ -157,3 +170,10 @@ class feature_ents():
             if ch in self.not_word:
                 cnt += 1
         return cnt
+
+    def paser_jieba(self, input, pos_dict):
+        ret_list = list()
+        for word, score in input:
+            ret_list.append((word.word, score))
+            pos_dict[word.word] = word.flag
+        return ret_list
