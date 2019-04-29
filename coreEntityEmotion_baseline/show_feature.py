@@ -56,6 +56,7 @@ if __name__ == '__main__':
     cnt5=0
     cnt6=0
     cntSum=0
+    entity_set=set()
     cnt7 = 0
     errorDataStr=''
     for newsId in tqdm(data):
@@ -71,6 +72,7 @@ if __name__ == '__main__':
             cnt2+=1
         cntSum+=len(data[newsId]['entity'])
         for entity in data[newsId]['entity']:
+            entity_set.add(entity)
             tempSet = set()
             if '\'' in entity or '\"' in entity:
                 cnt7+=1
@@ -101,4 +103,5 @@ if __name__ == '__main__':
     print('训练集实体总数：',cntSum)
     print('实体不在文章的百分比：{}%'.format(cnt6/cntSum*100))
     print('含有非法引号的实体的个数：',cnt7)
+    print('实体重复率：',(cntSum-len(entity_set))/cntSum*100,'%')
     print('end')

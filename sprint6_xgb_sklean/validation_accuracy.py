@@ -26,12 +26,12 @@ def accuracy(train, test,feature_ents_func):
         # 切分数据
         data_split('../coreEntityEmotion_baseline/data', 'coreEntityEmotion_train.txt')
 
-        # trueData = loadTrueData('../coreEntityEmotion_baseline/data/8_coreEntityEmotion_train.txt')
-        # entity_list= []
-        # for newsId in trueData:
-        #     entity_list+= trueData[newsId]['entity']
-        #
-        # feature_ents_func.set_train_data_entity(entity_list)
+        trueData = loadTrueData('../coreEntityEmotion_baseline/data/8_coreEntityEmotion_train.txt')
+        entity_list= []
+        for newsId in trueData:
+            entity_list+= trueData[newsId]['entity']
+
+        feature_ents_func.set_train_data_entity(entity_list)
 
         # 训练
         train.train_ents()

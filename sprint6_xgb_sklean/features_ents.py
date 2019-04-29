@@ -179,7 +179,7 @@ class feature_ents():
                                                                                ner),
                                                                            # 关键词最后一次出现的位置
                                                                            len(news['title']),  # 标题的长度
-                                                                           len(news['content'])  # 正文的长度
+                                                                           len(news['content']),  # 正文的长度
                                                                            ]])
             return features
 
@@ -201,8 +201,8 @@ class feature_ents():
                                      (news['title'] + news['content']).rindex(ner),  # 关键词最后一次出现的位置
                                      len(news['title']),  # 标题的长度
                                      len(news['content']),  # 正文的长度
-                                     (self.key_word_pos.index(self.word_pos[ner]) if (ner in self.word_pos and self.word_pos[ner] in self.key_word_pos) else self.key_word_pos.index('n'))*0.1
-                                     # self.train_data_entity.count(ner)/len(self.train_data_entity)  # 关键词在训练集中的概率 (效果差)
+                                     (self.key_word_pos.index(self.word_pos[ner]) if (ner in self.word_pos and self.word_pos[ner] in self.key_word_pos) else self.key_word_pos.index('n'))*0.1,
+                                     self.train_data_entity.count(ner)*0.1  # 关键词在训练集中的个数 (效果差)
                                      ]])
         return features
         # self.num_of_not_word(ner)

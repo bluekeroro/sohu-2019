@@ -32,6 +32,7 @@ class Train():
     #           'objective': 'binary:logistic'}  # 0.439
     def model_xgb(self, X, Y):
         xgb_model = XGBRegressor()
+        print('model_xgb fit')
         gbm = xgb_model.fit(X, Y)
         print("feature_importances_ : ", gbm.feature_importances_)
         print("Save model to " + self.model_path)
@@ -78,7 +79,7 @@ class Train():
                     line = line.strip()
                     train_data.append(line)
             if self.debug is True:
-                train_data = train_data[:int(len(train_data) / 10 / 10)]
+                train_data = train_data[:int(len(train_data) / 10)]
             cnt = 0
             cntSum = 0
             for news in tqdm(train_data):

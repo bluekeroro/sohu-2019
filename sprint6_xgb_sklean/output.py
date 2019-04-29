@@ -14,6 +14,8 @@ if __name__ == '__main__':
     start = time()
     feature_ents_func = feature_ents('../coreEntityEmotion_baseline/models/nerDict.txt',
                                      '../coreEntityEmotion_baseline/models/stopwords.txt',load_from_file=True)
+
+
     train = Train('../coreEntityEmotion_baseline/data/coreEntityEmotion_train.txt',
                   'models/model_xgb.joblib', feature_ents_func)
     train.train_ents()
