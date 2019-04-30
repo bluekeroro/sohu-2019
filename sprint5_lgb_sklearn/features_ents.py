@@ -17,6 +17,8 @@ class feature_ents():
         # self.ner = ner()
         self.load_from_file = load_from_file
         jieba.load_userdict(ner_dict_path)
+        if load_from_file == True:
+            jieba.load_userdict('../jieba_fenci_model/result/entity_userDict.txt')
         jieba.analyse.set_stop_words(stopword_file_path)
         self.not_word = '[\n\t，,。`……·\u200b！!?？“”""''~：:;；{}+-——=、/.()（|）%^&*@#$ <>《》【】[]\\]'
         self.key_word_pos = ('n', 'nr', 'nr1', 'nr2', 'nrj', 'nrf', 'ns', 'nsf',

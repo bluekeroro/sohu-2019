@@ -12,15 +12,17 @@ if __name__ == '__main__':
     for newsId in trainData:
         for entity in trainData[newsId]['entity']:
             entity_set.add(entity)
-    with open('result/entity_userDict.txt', 'w', encoding='utf-8') as file:
+    with open('result/entity_userDict_pos.txt', 'w', encoding='utf-8') as file1, open('result/entity_userDict.txt', 'w',
+                                                                                      encoding='utf-8') as file2:
         for entity in entity_set:
-            file.write('{} {} {}\n'.format(entity, 3, 'n'))
+            file1.write('{} {} {}\n'.format(entity, 3, 'n'))
+            file2.write(entity + '\n')
 
-    entity_set = set()
-    with open('../coreEntityEmotion_baseline/models/nerDict.txt', 'r', encoding='utf-8') as file:
-        for line in file:
-            line = line.strip()
-            entity_set.add(line)
-    with open('../coreEntityEmotion_baseline/models/nerDict_pos.txt', 'w', encoding='utf-8') as file:
-        for entity in entity_set:
-            file.write('{} {} {}\n'.format(entity, 3, 'n'))
+    # entity_set = set()
+    # with open('../coreEntityEmotion_baseline/models/nerDict.txt', 'r', encoding='utf-8') as file:
+    #     for line in file:
+    #         line = line.strip()
+    #         entity_set.add(line)
+    # with open('../coreEntityEmotion_baseline/models/nerDict_pos.txt', 'w', encoding='utf-8') as file:
+    #     for entity in entity_set:
+    #         file.write('{} {} {}\n'.format(entity, 3, 'n'))

@@ -11,6 +11,7 @@ class feature_ents():
             for line in file:
                 self.stopwords.add(line.strip())
         jieba.load_userdict(ner_dict_path)
+        jieba.load_userdict('result/entity_userDict.txt')
         jieba.analyse.set_stop_words(stopword_file_path)
         self.not_word = '[\n\t，,。`……·\u200b！!?？“”""''~：:;；{}+-——=、/.()（|）%^&*@#$ <>《》【】[]\\]'
         self.key_word_pos = ('n', 'nr', 'nr1', 'nr2', 'nrj', 'nrf', 'ns', 'nsf',
