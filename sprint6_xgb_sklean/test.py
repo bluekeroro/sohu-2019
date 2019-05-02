@@ -59,9 +59,9 @@ class Test():
             # 选前三个实体
             entity_list = [entity for entity in ent_predict_result[:3]]
             if len(entity_list)>2:
-                if entity_list[2][1]<0.19:
+                if entity_list[2][1]<0.2:
                     entity_list.remove(entity_list[2])
-                    if entity_list[1][1]<0.28:
+                    if entity_list[1][1]<0.35:
                         entity_list.remove(entity_list[1])
 
             ents = [self.delete_mark(entity[0]) for entity in entity_list[:3]]

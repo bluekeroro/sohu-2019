@@ -64,7 +64,8 @@ class Train():
         #     # 'min_data_in_leaf ': 100,
         # }  # f1 0.43
         # train
-        lgb_model = LGBMRegressor()
+        lgb_model = LGBMRegressor(learning_rate=0.0475, max_depth=13, n_estimators=100, num_leaves=70)
+        # {'learning_rate': 0.0475, 'max_depth': 13, 'n_estimators': 100, 'num_leaves': 70} 0.464
         print("Training lgb model....")
         gbm = lgb_model.fit(X, Y)
         print("feature_importances_ : ", gbm.feature_importances_)
@@ -103,8 +104,8 @@ class Train():
         dump(Y, "models/y1_featrues.joblib")
         # X = load("models/x1_featrues.joblib")
         # Y = load("models/y1_featrues.joblib")
-        # self.model_lgb(X, Y)
-        self.model_lgb_search(X, Y)
+        self.model_lgb(X, Y)
+        # self.model_lgb_search(X, Y)
         print("done!")
 
 

@@ -29,7 +29,7 @@ class Test():
 
     def test(self):
         # 训练好的模型地址
-        self.ents_model = load(self.ents_model_path)
+        # self.ents_model = load(self.ents_model_path)
         x_train = load("models/x1_featrues.joblib")
         y_train = load("models/y1_featrues.joblib")
         test_file = []
@@ -77,9 +77,9 @@ class Test():
             # 选前三个实体
             entity_list = [entity for entity in ent_predict_result[:3]]
             if len(entity_list) > 2:
-                if entity_list[2][1] < 0.18:
+                if entity_list[2][1] < 0.09:
                     entity_list.remove(entity_list[2])
-                    if entity_list[1][1] < 0.28:
+                    if entity_list[1][1] < 0.18:
                         entity_list.remove(entity_list[1])
 
             ents = [self.delete_mark(entity[0]) for entity in entity_list[:3]]

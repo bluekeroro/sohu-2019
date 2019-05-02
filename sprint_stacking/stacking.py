@@ -13,8 +13,8 @@ import numpy as np
 
 
 def predict(X_train, Y_train, X_test):
-    clfs = [LGBMRegressor(),
-            XGBRegressor()]
+    clfs = [LGBMRegressor(learning_rate=0.0475, max_depth=13, n_estimators=100, num_leaves=70),
+            XGBRegressor(learning_rate=0.0475, max_depth=4, n_estimators=300)]
     X = np.array(X_train)
     y = np.array(Y_train)
     X_predict = np.array(X_test)

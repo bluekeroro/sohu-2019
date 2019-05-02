@@ -32,7 +32,9 @@ class Train():
     # params = {'booster': 'gbtree', 'eta': 0.138, 'max_depth': 2, 'n_estimators': 100, 'silent': 0,
     #           'objective': 'binary:logistic'}  # 0.439
     def model_xgb(self, X, Y):
-        xgb_model = XGBRegressor(max_depth=3, n_estimators=100)
+        xgb_model = XGBRegressor(learning_rate=0.0475, max_depth=4, n_estimators=300)
+        #  {'learning_rate': 0.0475, 'max_depth': 4, 'n_estimators': 300}  0.505
+        # max_depth=3, n_estimators=200   # 0.471
         print('model_xgb fit')
         gbm = xgb_model.fit(X, Y)
         print("feature_importances_ : ", gbm.feature_importances_)
@@ -57,7 +59,7 @@ class Train():
         param_grid = dict(
             max_depth=[2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13],  # 3
             learning_rate=np.linspace(0.03, 0.1, 5),
-            n_estimators=[100, 200, 300],    # 200
+            n_estimators=[100, 200, 300],  # 200
             # num_class=[2],
             # objective=['multi:softmax']  # 'binary:logistic'
         )
@@ -151,9 +153,9 @@ class Train():
             Y = load("models/y1_featrues.joblib")
         # X = load("models/x1_featrues.joblib")
         # Y = load("models/y1_featrues.joblib")
-        # self.model_xgb(X, Y)
+        self.model_xgb(X, Y)
         # self.model_xgb_tmp(X, Y)
-        self.model_xgb_search(X, Y)
+        # self.model_xgb_search(X, Y)
         print("done!")
 
 
