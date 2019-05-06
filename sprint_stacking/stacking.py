@@ -13,7 +13,7 @@ import numpy as np
 
 
 def predict(X_train, Y_train, X_test):
-    clfs = [LGBMRegressor(learning_rate=0.0475, max_depth=13, n_estimators=100, num_leaves=70),
+    clfs = [LGBMRegressor(learning_rate=0.0475, max_depth=13, n_estimators=100, num_leaves=80),
             XGBRegressor(learning_rate=0.0475, max_depth=4, n_estimators=300)]
     X = np.array(X_train)
     y = np.array(Y_train)
@@ -26,10 +26,11 @@ def predict(X_train, Y_train, X_test):
     skf = StratifiedKFold(n_splits=n_folds)
     for j, clf in enumerate(clfs):
         '''依次训练各个单模型'''
+        print("clf", j)
         dataset_blend_test_j = np.zeros((X_predict.shape[0], n_folds))
         for i, (train, test) in enumerate(skf.split(X, y)):
             '''使用第i个部分作为预测，剩余的部分来训练模型，获得其预测的输出作为第i部分的新特征。'''
-            # print("Fold", i)
+            print("stacking Fold", i)
             X_train, y_train, X_test, y_test = X[train], y[train], X[test], y[test]
             clf.fit(X_train, y_train)
             y_submission = clf.predict(X_test)
@@ -39,7 +40,8 @@ def predict(X_train, Y_train, X_test):
         dataset_blend_test[:, j] = dataset_blend_test_j.mean(1)
         # print("val auc Score: %f" % roc_auc_score(y_predict, dataset_blend_test[:, j]))
     # clf = LogisticRegression()
-    clf = GradientBoostingRegressor(learning_rate=0.02, subsample=0.5, max_depth=6, n_estimators=30)
+    clf = GradientBoostingRegressor(learning_rate=0.02,max_depth=6)
+    # clf = GradientBoostingRegressor(learning_rate=0.02, subsample=0.5, max_depth=6, n_estimators=30)
     clf.fit(dataset_blend_train, y)
     y_submission = clf.predict(dataset_blend_test)
     return y_submission

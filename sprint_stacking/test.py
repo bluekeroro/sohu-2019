@@ -27,11 +27,17 @@ class Test():
 
         self.debug = debug
 
-    def test(self):
+    def test(self, X=None, Y=None):
         # 训练好的模型地址
         # self.ents_model = load(self.ents_model_path)
-        x_train = load("models/x1_featrues.joblib")
-        y_train = load("models/y1_featrues.joblib")
+        ents_num = self.load_ents_num('../coreEntityEmotion_baseline/data/result_ent_num.txt')
+        print('test start')
+        if X == None or Y == None:
+            x_train = load("models/x1_featrues.joblib")
+            y_train = load("models/y1_featrues.joblib")
+        else:
+            x_train = X
+            y_train = Y
         test_file = []
         with open(self.test_file, 'r', encoding='utf-8') as file:
             for line in file:
@@ -45,17 +51,24 @@ class Test():
         entity_dict = {}
         for news in tqdm(test_file):
             news = json.loads(news)
-            entity_dict[news['newsId']] =[]
+            entity_dict[news['newsId']] = []
             ent_fea = self.feature_ents_func.combine_features(news)
             for fea in ent_fea:
                 x_test.append(fea[1])
                 entity_dict[news['newsId']].append([fea[0][0]])
         y_test = predict(x_train, y_train, x_test)
-        index=0
+        index = 0
         for newsId in entity_dict:
             for i in entity_dict[newsId]:
                 i.append(y_test[index])
-                index+=1
+                index += 1
+            entity_dict[newsId].sort(key=lambda x: x[1], reverse=True)
+            try:
+                pred_score[0].append(entity_dict[newsId][0][1])
+                pred_score[1].append(entity_dict[newsId][1][1])
+                pred_score[2].append(entity_dict[newsId][2][1])
+            except IndexError:
+                pass
 
         for news in tqdm(test_file):
             news = json.loads(news)
@@ -66,21 +79,16 @@ class Test():
             #     ent_score = self.ents_model.predict([fea[1]])
             #     ent_predict_result.append([fea[0][0], ent_score])
 
-            ent_predict_result.sort(key=lambda x: x[1], reverse=True)
-
-            try:
-                pred_score[0].append(ent_predict_result[0][1])
-                pred_score[1].append(ent_predict_result[1][1])
-                pred_score[2].append(ent_predict_result[2][1])
-            except IndexError:
-                pass
+            # ent_predict_result.sort(key=lambda x: x[1], reverse=True)\
             # 选前三个实体
-            entity_list = [entity for entity in ent_predict_result[:3]]
-            if len(entity_list) > 2:
-                if entity_list[2][1] < 0.09:
-                    entity_list.remove(entity_list[2])
-                    if entity_list[1][1] < 0.18:
-                        entity_list.remove(entity_list[1])
+            entity_list = [entity for entity in ent_predict_result[:ents_num[news['newsId']]]]
+
+            # entity_list = [entity for entity in ent_predict_result[:3]]
+            # if len(entity_list) > 2:
+            #     if entity_list[2][1] < np.median(pred_score[2]):
+            #         entity_list.remove(entity_list[2])
+            #         if entity_list[1][1] < np.median(pred_score[1]):
+            #             entity_list.remove(entity_list[1])
 
             ents = [self.delete_mark(entity[0]) for entity in entity_list[:3]]
             emos = ['POS' for i in ents[:3]]
@@ -105,6 +113,14 @@ class Test():
         str_input = str_input.replace('\'', '').replace('\"', '').replace(',', '')  # 如果实体中只含有一个引号，会导致提交报错
         return str_input
 
+    def load_ents_num(self, path):
+        data = {}
+        with open(path, 'r', encoding='utf-8') as file:
+            for line in file:
+                line = line.strip()
+                line = line.split('\t')
+                data[line[0]] = line[1]
+        return data
 
 if __name__ == '__main__':
     fea_ents = feature_ents('../coreEntityEmotion_baseline/models/nerDict.txt',

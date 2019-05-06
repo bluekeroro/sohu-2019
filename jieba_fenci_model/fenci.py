@@ -35,11 +35,14 @@ def save_fenci_feature_func(input_file, output_file, feature_ents_func):
             train_data.append(line)
 
     result_set = set()
-    with open(output_file, 'r', encoding='utf-8') as file:
-        for line in file:
-            line = line.strip()
-            line = eval(line)
-            result_set |= set(line)
+    try:
+        with open(output_file, 'r', encoding='utf-8') as file:
+            for line in file:
+                line = line.strip()
+                line = eval(line)
+                result_set |= set(line)
+    except IOError:
+        print('文件不存在')
 
     result = open(output_file, 'a', encoding='utf-8')
     for news in tqdm(train_data):

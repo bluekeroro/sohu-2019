@@ -49,6 +49,8 @@ class Train():
                 X.append(x[1])
         print("结巴分词准确率：{}%".format(cnt / cntSum * 100))
         print("Save features... ")
+        if self.debug is False:
+            return X,Y
         dump(X, "models/x1_featrues.joblib")
         dump(Y, "models/y1_featrues.joblib")
         print("done!")
