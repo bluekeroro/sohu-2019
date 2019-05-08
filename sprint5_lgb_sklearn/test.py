@@ -29,6 +29,7 @@ class Test():
         # 训练好的模型地址
         self.ents_model = load(self.ents_model_path)
         # test_file = open(self.test_file, 'r', encoding='utf-8').readlines()
+        ents_num = self.load_ents_num('../coreEntityEmotion_baseline/data/result_ent_num.txt')
         test_file =[]
         with open(self.test_file, 'r', encoding='utf-8') as file:
             for line in file:
@@ -56,12 +57,13 @@ class Test():
             except IndexError:
                 pass
             # 选前三个实体
+            # entity_list = [entity for entity in ent_predict_result[:ents_num[news['newsId']]]]
             entity_list = [entity for entity in ent_predict_result[:3]]
-            if len(entity_list) > 2:
-                if entity_list[2][1] < 0.19:
-                    entity_list.remove(entity_list[2])
-                    if entity_list[1][1] < 0.37:
-                        entity_list.remove(entity_list[1])
+            # if len(entity_list) > 2:
+            #     if entity_list[2][1] < 0.19:
+            #         entity_list.remove(entity_list[2])
+            #         if entity_list[1][1] < 0.37:
+            #             entity_list.remove(entity_list[1])
 
             ents = [self.delete_mark(entity[0]) for entity in entity_list[:3]]
             emos = ['POS' for i in ents[:3]]
@@ -85,6 +87,15 @@ class Test():
             str_input = str_input.replace('》', '')
         str_input = str_input.replace('\'', '').replace('\"', '').replace(',', '')  # 如果实体中只含有一个引号，会导致提交报错
         return str_input
+
+    def load_ents_num(self, path):
+        data = {}
+        with open(path, 'r', encoding='utf-8') as file:
+            for line in file:
+                line = line.strip()
+                line = line.split('\t')
+                data[line[0]] = line[1]
+        return data
 
 
 if __name__ == '__main__':

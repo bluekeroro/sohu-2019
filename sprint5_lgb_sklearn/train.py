@@ -14,6 +14,8 @@ from sprint5_lgb_sklearn.features_ents import feature_ents
 from sklearn.model_selection import train_test_split, StratifiedKFold, GridSearchCV
 from lightgbm.sklearn import LGBMRegressor
 import numpy as np
+from sklearn.feature_selection import SelectFromModel
+from sklearn.utils import class_weight
 
 
 class Train():
@@ -64,7 +66,12 @@ class Train():
         #     # 'min_data_in_leaf ': 100,
         # }  # f1 0.43
         # train
-        lgb_model = LGBMRegressor(learning_rate=0.0475, max_depth=13, n_estimators=100, num_leaves=70)
+        print("Y is 1:", Y.count(1))
+        print("Y is 0:", Y.count(0))
+        class_weights = class_weight.compute_class_weight('balanced', np.unique(Y), Y)
+        class_weights = dict(enumerate(class_weights))
+        lgb_model = LGBMRegressor(learning_rate=0.0475, max_depth=13, n_estimators=100, num_leaves=70,
+                                  class_weight=class_weights)
         # {'learning_rate': 0.0475, 'max_depth': 13, 'n_estimators': 100, 'num_leaves': 70} 0.464
         print("Training lgb model....")
         gbm = lgb_model.fit(X, Y)
@@ -81,7 +88,7 @@ class Train():
                 train_data.append(line)
 
         if self.debug is True:
-            train_data = train_data[:int(len(train_data) / 10 / 10)]
+            train_data = train_data[:int(len(train_data) / 10)]
         X = []
         Y = []
         cnt = 0

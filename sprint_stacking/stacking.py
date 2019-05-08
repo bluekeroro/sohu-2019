@@ -15,11 +15,11 @@ import numpy as np
 def predict(X_train, Y_train, X_test):
     clfs = [LGBMRegressor(learning_rate=0.0475, max_depth=13, n_estimators=100, num_leaves=80),
             XGBRegressor(learning_rate=0.0475, max_depth=4, n_estimators=300)]
-    X = np.array(X_train)
-    y = np.array(Y_train)
-    X_predict = np.array(X_test)
-    dataset_blend_train = np.zeros((X.shape[0], len(clfs)))
-    dataset_blend_test = np.zeros((X_predict.shape[0], len(clfs)))
+    X = np.array(X_train,dtype='float32')
+    y = np.array(Y_train,dtype='float32')
+    X_predict = np.array(X_test,dtype='float32')
+    dataset_blend_train = np.zeros((X.shape[0], len(clfs)),dtype='float32')
+    dataset_blend_test = np.zeros((X_predict.shape[0], len(clfs)),dtype='float32')
 
     '''5折stacking'''
     n_folds = 5
@@ -27,7 +27,7 @@ def predict(X_train, Y_train, X_test):
     for j, clf in enumerate(clfs):
         '''依次训练各个单模型'''
         print("clf", j)
-        dataset_blend_test_j = np.zeros((X_predict.shape[0], n_folds))
+        dataset_blend_test_j = np.zeros((X_predict.shape[0], n_folds),dtype='float32')
         for i, (train, test) in enumerate(skf.split(X, y)):
             '''使用第i个部分作为预测，剩余的部分来训练模型，获得其预测的输出作为第i部分的新特征。'''
             print("stacking Fold", i)
@@ -38,6 +38,7 @@ def predict(X_train, Y_train, X_test):
             dataset_blend_test_j[:, i] = clf.predict(X_predict)
         '''对于测试集，直接用这k个模型的预测值均值作为新的特征'''
         dataset_blend_test[:, j] = dataset_blend_test_j.mean(1)
+        del dataset_blend_test_j
         # print("val auc Score: %f" % roc_auc_score(y_predict, dataset_blend_test[:, j]))
     # clf = LogisticRegression()
     clf = GradientBoostingRegressor(learning_rate=0.02,max_depth=6)

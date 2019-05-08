@@ -81,14 +81,14 @@ class Test():
 
             # ent_predict_result.sort(key=lambda x: x[1], reverse=True)\
             # 选前三个实体
-            entity_list = [entity for entity in ent_predict_result[:ents_num[news['newsId']]]]
+            # entity_list = [entity for entity in ent_predict_result[:ents_num[news['newsId']]]]
 
-            # entity_list = [entity for entity in ent_predict_result[:3]]
-            # if len(entity_list) > 2:
-            #     if entity_list[2][1] < np.median(pred_score[2]):
-            #         entity_list.remove(entity_list[2])
-            #         if entity_list[1][1] < np.median(pred_score[1]):
-            #             entity_list.remove(entity_list[1])
+            entity_list = [entity for entity in ent_predict_result[:3]]
+            if len(entity_list) > 2:
+                if entity_list[2][1] < np.median(pred_score[2]):
+                    entity_list.remove(entity_list[2])
+                    if entity_list[1][1] < np.median(pred_score[1]):
+                        entity_list.remove(entity_list[1])
 
             ents = [self.delete_mark(entity[0]) for entity in entity_list[:3]]
             emos = ['POS' for i in ents[:3]]
@@ -119,7 +119,7 @@ class Test():
             for line in file:
                 line = line.strip()
                 line = line.split('\t')
-                data[line[0]] = line[1]
+                data[line[0]] = int(line[1])
         return data
 
 if __name__ == '__main__':
