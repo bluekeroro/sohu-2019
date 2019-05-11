@@ -16,6 +16,7 @@ from lightgbm.sklearn import LGBMRegressor
 import numpy as np
 from sklearn.feature_selection import SelectFromModel
 from sklearn.utils import class_weight
+from imblearn.over_sampling import SMOTE, ADASYN
 
 
 class Train():
@@ -66,12 +67,18 @@ class Train():
         #     # 'min_data_in_leaf ': 100,
         # }  # f1 0.43
         # train
-        print("Y is 1:", Y.count(1))
-        print("Y is 0:", Y.count(0))
+        # X, Y = SMOTE().fit_sample(X, Y)
+        # print("Y is 1:", Y.count(1))
+        # print("Y is 0:", Y.count(0))
         class_weights = class_weight.compute_class_weight('balanced', np.unique(Y), Y)
         class_weights = dict(enumerate(class_weights))
-        lgb_model = LGBMRegressor(learning_rate=0.0475, max_depth=13, n_estimators=100, num_leaves=70,
+        print("class_weights", class_weights)
+        lgb_model = LGBMRegressor(learning_rate=0.0475, max_depth=13, n_estimators=100, num_leaves=50,
                                   class_weight=class_weights)
+        # lgb_model = LGBMRegressor(learning_rate=0.0475, max_depth=13, n_estimators=100, num_leaves=60,
+        #                           class_weight=class_weights) # 0.552
+        # lgb_model = LGBMRegressor(learning_rate=0.0475, max_depth=13, n_estimators=100, num_leaves=70,
+        #                           class_weight=class_weights) # 0.542
         # {'learning_rate': 0.0475, 'max_depth': 13, 'n_estimators': 100, 'num_leaves': 70} 0.464
         print("Training lgb model....")
         gbm = lgb_model.fit(X, Y)
@@ -88,7 +95,7 @@ class Train():
                 train_data.append(line)
 
         if self.debug is True:
-            train_data = train_data[:int(len(train_data) / 10)]
+            train_data = train_data[:int(len(train_data)/10)]
         X = []
         Y = []
         cnt = 0
@@ -106,9 +113,10 @@ class Train():
                     Y.append(0)
                 X.append(x[1])
         print("结巴分词准确率：{}%".format(cnt / cntSum * 100))
-        print("Save features... ")
-        dump(X, "models/x1_featrues.joblib")
-        dump(Y, "models/y1_featrues.joblib")
+        # print("Save features... ")
+        # dump(X, "models/x1_featrues.joblib")
+        # dump(Y, "models/y1_featrues.joblib")
+
         # X = load("models/x1_featrues.joblib")
         # Y = load("models/y1_featrues.joblib")
         self.model_lgb(X, Y)

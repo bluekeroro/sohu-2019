@@ -1,16 +1,19 @@
 import jieba
 import jieba.analyse
 import pkuseg
+from joblib import dump,load
+from sklearn.preprocessing import normalize
+from tqdm import tqdm
+import time
+import json
 import re
 import numpy as np
 
-from bert_reduce import bert
 from jieba_fenci_model import fenci
-from ltp_reduce import LTP
-
+import jieba.posseg as pseg
 
 class feature_ents():
-    def __init__(self, ner_dict_path, stopword_file_path, load_from_file=False):
+    def __init__(self,ner_dict_path,stopword_file_path,load_from_file=False):
         self.ner_dict_path = ner_dict_path
         self.stopwords = set()
         self.pku = pkuseg.pkuseg()
@@ -20,21 +23,17 @@ class feature_ents():
         # self.ner = ner()
         self.load_from_file = load_from_file
         jieba.load_userdict(ner_dict_path)
-        if load_from_file == True:
-            jieba.load_userdict('../jieba_fenci_model/result/entity_userDict.txt')
         jieba.analyse.set_stop_words(stopword_file_path)
         self.not_word = '[\n\t，,。`……·\u200b！!?？“”""''~：:;；{}+-——=、/.()（|）%^&*@#$ <>《》【】[]\\]'
-        self.key_word_pos = ('n', 'nr', 'nr1', 'nr2', 'nrj', 'nrf', 'ns', 'nsf',
-                             'nt', 'nz', 'nl', 'ng', 'vn', 'v', 'an', 's', 'f', 't', 'tg')
+        self.key_word_pos = ('ns', 'n', 'vn', 'v', 'nr', 'nt', 'nz', 'an','s')
         self.feature_data_dict = None
-        self.train_data_entity = None
-        self.word_pos = dict()
-        self.ltp_obj = LTP('../coreEntityEmotion_baseline/data/result_ltp.txt')
-        self.bert_obj = bert('../coreEntityEmotion_baseline/data/result_bert.txt')
-
-    def set_train_data_entity(self, train_data_entity):
-        self.train_data_entity = train_data_entity
-
+        
+    # def set_ners(self, news):
+    #     self.ners = set(self.ner.pkuseg_cut(news))
+        
+    # def get_ners(self):
+    #     return self.ners
+   
     # tfidf分数
     def get_tfidf_Score(self, news):
         title = news['title']
@@ -52,7 +51,7 @@ class feature_ents():
         title_words_merge = {}
         mergeWords = set()
         for index, word in enumerate(content_words):
-            if index > 0 and word[1] == content_words[index - 1][1] and word[1] > 0:
+            if index > 0 and word[1] == content_words[index - 1][1] and word[1]>0:
                 if (not self.isWord(word[0])) or (not self.isWord(content_words[index - 1][0])):
                     continue
                 merge_str = self.ban_escape_char(word[0]) + '.*' + self.ban_escape_char(content_words[index - 1][0])
@@ -64,7 +63,7 @@ class feature_ents():
                     tmp_index += 1
                 mergeWords.add(merge_str)
         for index, word in enumerate(title_words):
-            if index > 0 and word[1] == title_words[index - 1][1] and word[1] > 0:
+            if index > 0 and word[1] == title_words[index - 1][1] and word[1]>0:
                 if (not self.isWord(word[0])) or (not self.isWord(title_words[index - 1][0])):
                     continue
                 merge_str = self.ban_escape_char(word[0]) + '.*' + self.ban_escape_char(title_words[index - 1][0])
@@ -80,12 +79,9 @@ class feature_ents():
             for re_word in re_words:
                 if len(re_word) > 0:
                     jieba.add_word(re_word)
-        content_words_merge = dict(self.paser_jieba(
-            jieba.analyse.extract_tags(content, topK=40, withWeight=True, allowPOS=self.key_word_pos, withFlag=True),
-            self.word_pos))  # [(,),...]
-        title_words_merge = dict(self.paser_jieba(
-            jieba.analyse.extract_tags(title, topK=40, withWeight=True, allowPOS=self.key_word_pos, withFlag=True),
-            self.word_pos))
+        content_words_merge = dict(
+            jieba.analyse.extract_tags(content, topK=40, withWeight=True))  # [(,),...]
+        title_words_merge = dict(jieba.analyse.extract_tags(title, topK=40, withWeight=True))
         content_words = dict(content_words)
         content_words.update(content_words_merge)
         title_words = dict(title_words)
@@ -96,10 +92,10 @@ class feature_ents():
         for key in list(title_words):
             if not self.isWord(key):
                 title_words.pop(key)
-        return content_words, title_words
+        return content_words,title_words
 
     # textRank分数
-    def get_textRank_Score(self, news):
+    def get_textRank_Score(self,news):
         title = news['title']
         content = news['content']
         specialWords = set(re.findall(r'《.*》', title + '\t' + content)) \
@@ -109,12 +105,8 @@ class feature_ents():
             word = word.replace('《', '').replace('》', '').replace('[', '') \
                 .replace(']', '').replace('【', '').replace('】', '')
             jieba.add_word(word)
-        content_words = self.paser_jieba(jieba.analyse.textrank(content, topK=40, withWeight=True,
-                                                                allowPOS=self.key_word_pos, withFlag=True),
-                                         self.word_pos)  # [(,),...]
-        title_words = self.paser_jieba(
-            jieba.analyse.textrank(title, topK=40, withWeight=True, allowPOS=self.key_word_pos, withFlag=True),
-            self.word_pos)
+        content_words = jieba.analyse.textrank(content, topK=40, withWeight=True,allowPOS=self.key_word_pos)  # [(,),...]
+        title_words = jieba.analyse.textrank(title, topK=40, withWeight=True,allowPOS=self.key_word_pos)
         content_words_merge = {}
         title_words_merge = {}
         mergeWords = set()
@@ -148,13 +140,8 @@ class feature_ents():
                 if len(re_word) > 0:
                     jieba.add_word(re_word)
         content_words_merge = dict(
-            self.paser_jieba(
-                jieba.analyse.textrank(content, topK=40, withWeight=True, allowPOS=self.key_word_pos, withFlag=True),
-                self.word_pos))  # [(,),...]
-        title_words_merge = dict(
-            self.paser_jieba(
-                jieba.analyse.textrank(title, topK=40, withWeight=True, allowPOS=self.key_word_pos, withFlag=True),
-                self.word_pos))
+            jieba.analyse.textrank(content, topK=40, withWeight=True,allowPOS=self.key_word_pos))  # [(,),...]
+        title_words_merge = dict(jieba.analyse.textrank(title, topK=40, withWeight=True,allowPOS=self.key_word_pos))
         content_words = dict(content_words)
         content_words.update(content_words_merge)
         title_words = dict(title_words)
@@ -166,15 +153,12 @@ class feature_ents():
             if not self.isWord(key):
                 title_words.pop(key)
         return content_words, title_words
-
+    
     # 把特征接到一起
     def combine_features(self, news):
         features = []
-        # print("combine_features 训练集的关键词：",self.train_data_entity[:10])
-        if True:
-        # if self.load_from_file is True:
+        if self.load_from_file is True:
             if self.feature_data_dict is None:
-                print('加载预分词')
                 self.feature_data_dict = fenci.get_fenci_feature_func(
                     '../jieba_fenci_model/result/result_jieba_fenci.txt')
             for ner in self.feature_data_dict[news['newsId']]:
@@ -188,49 +172,31 @@ class feature_ents():
                                                                            (news['title'] + news['content']).index(ner),
                                                                            # 关键词第一次出现的位置
                                                                            (news['title'] + news['content']).rindex(
-                                                                               ner),
-                                                                           # 关键词最后一次出现的位置
+                                                                               ner),  # 关键词最后一次出现的位置
                                                                            len(news['title']),  # 标题的长度
-                                                                           len(news['content']),  # 正文的长度
-                                                                           self.bert_obj.is_in_bert(news['newsId'],ner),
-                                                                           self.ltp_obj.get_label(ner, news['newsId'],model=3)
-                                                                           # self.train_data_entity.count(ner)/len(self.train_data_entity)  # 关键词在训练集中的概率 (效果差)
-                                                                           ] + self.ltp_obj.get_label(ner,news['newsId'],model=1)])
+                                                                           len(news['content'])  # 正文的长度
+                                                                           ]])
             return features
-
         content_words_tfidf, title_words_tfidf = self.get_tfidf_Score(news)
         content_words_textRank, title_words_textRank = self.get_textRank_Score(news)
-        keys = content_words_tfidf.keys() | title_words_tfidf.keys() | content_words_textRank.keys() | title_words_textRank.keys()
+        # content_words_tfidf = content_words_textRank
+        # title_words_tfidf = title_words_textRank
+        keys = content_words_tfidf.keys()|title_words_tfidf.keys()|content_words_textRank.keys()|title_words_textRank.keys()
+        features = []
         for ner in keys:
-            # # one_hot = np.zeros(len(self.key_word_pos) + 1)
-            # one_hot = np.zeros(len(self.key_word_pos))
-            # if (ner in self.word_pos and self.word_pos[ner] in self.key_word_pos):
-            #     one_hot[self.key_word_pos.index(self.word_pos[ner])] = 1
-            # else:
-            #     # one_hot[len(self.key_word_pos)] = 1
-            #     one_hot[self.key_word_pos.index('n')] = 1
-            features.append([[ner], [content_words_tfidf[ner] if ner in content_words_tfidf else 0,  # 特征：正文中的tfidf
-                                     title_words_tfidf[ner] if ner in title_words_tfidf else 0,  # 标题中的tfidf
-                                     content_words_textRank[ner] if ner in content_words_textRank else 0,
-                                     # 特征：正文中的textRank
-                                     title_words_textRank[ner] if ner in title_words_textRank else 0,  # 标题中的textRank
-                                     len(ner),  # 实体的长度
-                                     self.num_of_not_word(ner),  # 含有符号的个数
-                                     news['content'].count(ner),  # 正文中的词频
-                                     news['title'].count(ner),  # title中的词频
-                                     (news['title'] + news['content']).count(ner),  # 总的词频
-                                     (news['title'] + news['content']).index(ner),  # 关键词第一次出现的位置
-                                     (news['title'] + news['content']).rindex(ner),  # 关键词最后一次出现的位置
-                                     len(news['title']),  # 标题的长度
-                                     len(news['content']),  # 正文的长度
-                                     (self.key_word_pos.index(self.word_pos[ner]) if (
-                                                 ner in self.word_pos and self.word_pos[
-                                             ner] in self.key_word_pos) else self.key_word_pos.index('n')) * 0.1,
-                                     self.bert_obj.is_in_bert(news['newsId'], ner),
-                                     self.ltp_obj.get_label(ner, news['newsId'], model=3)
-                                     # self.train_data_entity.count(ner)/len(self.train_data_entity)  # 关键词在训练集中的概率 (效果差)
-                                     ] + self.ltp_obj.get_label(ner, news['newsId'], model=1)])
-        return features
+            features.append([[ner],[content_words_tfidf[ner] if ner in content_words_tfidf else 0,
+                                    title_words_tfidf[ner] if ner in title_words_tfidf else 0,
+                                    content_words_textRank[ner] if ner in content_words_textRank else 0,
+                                    title_words_textRank[ner] if ner in title_words_textRank else 0,
+                                    len(ner),self.num_of_not_word(ner),  # 特征：正文中的tfidf，标题中的tfidf，实体的长度,含有符号的个数
+                                    news['content'].count(ner),  # 正文中的词频
+                                    news['title'].count(ner),  # title中的词频
+                                    (news['title'] + news['content']).count(ner),  # 总的词频
+                                    (news['title'] + news['content']).index(ner),  # 关键词第一次出现的位置
+                                    (news['title'] + news['content']).rindex(ner),  # 关键词最后一次出现的位置
+                                    len(news['title']),  # 标题的长度
+                                    len(news['content'])  # 正文的长度
+                                    ]])
         # self.num_of_not_word(ner)
         # 正则化 （效果差）
         # feature_matrix = [feature[1] for feature in features]
@@ -243,6 +209,7 @@ class feature_ents():
         #     if ner in tfidf: #0
         #         a = tfidf[ner]
         #     features.append([[ner],[a]])  #特征可以继续添加 b,c,d,e,f,g......
+        return features
 
     def pkuseg_cut(self, news):
         title = news['title']
@@ -277,16 +244,9 @@ class feature_ents():
             ret_str += ch
         return ret_str
 
-    def num_of_not_word(self, str_input):
-        cnt = 0
+    def num_of_not_word(self,str_input):
+        cnt=0
         for ch in str_input:
             if ch in self.not_word:
-                cnt += 1
+                cnt+=1
         return cnt
-
-    def paser_jieba(self, input, pos_dict):
-        ret_list = list()
-        for word, score in input:
-            ret_list.append((word.word, score))
-            pos_dict[word.word] = word.flag
-        return ret_list

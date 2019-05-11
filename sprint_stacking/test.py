@@ -46,7 +46,7 @@ class Test():
         res_file = open(self.output_file, 'w', encoding='utf-8')
         pred_score = [[] for i in range(3)]
         if self.debug is True:
-            test_file = test_file[:int(len(test_file) / 10)]
+            test_file = test_file[:int(len(test_file) / 10/100)]
         x_test = list()
         entity_dict = {}
         for news in tqdm(test_file):

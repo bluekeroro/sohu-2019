@@ -28,9 +28,8 @@ class Test():
     def test(self):
         # 训练好的模型地址
         self.ents_model = load(self.ents_model_path)
-        # test_file = open(self.test_file, 'r', encoding='utf-8').readlines()
-        ents_num = self.load_ents_num('../coreEntityEmotion_baseline/data/result_ent_num.txt')
-        test_file =[]
+        # ents_num = self.load_ents_num('../coreEntityEmotion_baseline/data/result_ent_num.txt')
+        test_file = []
         with open(self.test_file, 'r', encoding='utf-8') as file:
             for line in file:
                 line = line.strip()
@@ -38,7 +37,9 @@ class Test():
         res_file = open(self.output_file, 'w', encoding='utf-8')
         pred_score = [[] for i in range(3)]
         if self.debug is True:
-            test_file = test_file[:int(len(test_file) / 10)]
+            test_file = test_file[:int(len(test_file)/10)]
+        result_dict = {}
+        print('predict')
         for news in tqdm(test_file):
             news = json.loads(news)
             ent_fea = self.feature_ents_func.combine_features(news)
@@ -59,11 +60,17 @@ class Test():
             # 选前三个实体
             # entity_list = [entity for entity in ent_predict_result[:ents_num[news['newsId']]]]
             entity_list = [entity for entity in ent_predict_result[:3]]
-            # if len(entity_list) > 2:
-            #     if entity_list[2][1] < 0.19:
-            #         entity_list.remove(entity_list[2])
-            #         if entity_list[1][1] < 0.37:
-            #             entity_list.remove(entity_list[1])
+            result_dict[news['newsId']] = entity_list
+
+        print('output')
+        for news in tqdm(test_file):
+            news = json.loads(news)
+            entity_list = result_dict[news['newsId']]
+            if len(entity_list) > 2:
+                if entity_list[2][1] < np.median(pred_score[2]):
+                    entity_list.remove(entity_list[2])
+                    if entity_list[1][1] < np.median(pred_score[1]):
+                        entity_list.remove(entity_list[1])
 
             ents = [self.delete_mark(entity[0]) for entity in entity_list[:3]]
             emos = ['POS' for i in ents[:3]]
@@ -74,6 +81,8 @@ class Test():
               '最小值：', np.min(pred_score[1]))
         print("第3关键词的平均值:", np.average(pred_score[2]), '中位数：', np.median(pred_score[2]), '最大值：', np.max(pred_score[2]),
               '最小值：', np.min(pred_score[2]))
+        print('np.median(pred_score[2])', np.median(pred_score[2]))
+        print('np.median(pred_score[1])', np.median(pred_score[1]))
         print("done")
         res_file.close()
 

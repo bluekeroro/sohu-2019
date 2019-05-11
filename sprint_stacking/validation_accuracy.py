@@ -19,7 +19,7 @@ from sprint_stacking.train import Train
 
 
 def accuracy(train, test):
-    turn = 1
+    turn = 4
     entityScoreSum = 0
     emotionScoreSum = 0
     for i in range(turn):

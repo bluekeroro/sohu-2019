@@ -30,7 +30,7 @@ class Train():
                 train_data.append(line)
 
         if self.debug is True:
-            train_data = train_data[:int(len(train_data) / 10 / 10)]
+            train_data = train_data[:int(len(train_data) / 10 / 100)]
         X = []
         Y = []
         cnt = 0

@@ -61,7 +61,7 @@ class Train():
                 train_data.append(line)
 
         if self.debug is True:
-            train_data = train_data[:int(len(train_data) / 10 / 10)]
+            train_data = train_data[:int(len(train_data) / 10)]
         X = []
         Y = []
         cnt = 0
@@ -80,8 +80,8 @@ class Train():
                 X.append(x[1])
         print("结巴分词准确率：{}%".format(cnt / cntSum * 100))
         print("Save features... ")
-        dump(X, "models/x1_featrues.joblib")
-        dump(Y, "models/y1_featrues.joblib")
+        # dump(X, "models/x1_featrues.joblib")
+        # dump(Y, "models/y1_featrues.joblib")
         # X = load("models/x1_featrues.joblib")
         # Y = load("models/y1_featrues.joblib")
         self.model_lgb(X, Y)
